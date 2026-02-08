@@ -1,4 +1,4 @@
-import { apiGet } from "@/services/api";
+import { apiGet } from '@/services/api';
 
 export default async function TrainerPage({ params }) {
   const trainer = await apiGet(`/trainers/${params.id}`);

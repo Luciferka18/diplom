@@ -1,8 +1,7 @@
-import { api } from "@/services/api";
-import Link from "next/link";
+import { apiGet } from "@/services/api";
 
 export default async function ProgramsPage() {
-  const { data } = await api.get("/programs");
+  const data = await apiGet("/programs");
 
   return (
     <div>

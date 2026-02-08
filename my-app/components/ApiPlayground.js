@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { apiPost, apiBaseUrl } from '@/src/services/api';
+import { apiPost, apiBaseUrl } from '@/services/api';
 
 const initial = {
   register: { login: '', password: '', password_confirmation: '', name: '' },

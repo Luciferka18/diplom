@@ -4,9 +4,8 @@ import { useCart } from "@/context/CartContext";
 import { api } from "@/services/api";
 
 export default function CartPage() {
-  const { cart, removeFromCart, clearCart } = useCart();
-
-  const total = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const cartState = (typeof useCart === "function" ? useCart() : null) || {};
+  const { cart = [], addToCart, removeFromCart, clearCart, total = 0 } = cartState;
 
   const order = async () => {
     await api.post("/orders", {
