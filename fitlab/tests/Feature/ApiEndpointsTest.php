@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Article;
 use App\Models\Product;
+use App\Models\Review;
 use App\Models\Program;
 use App\Models\Trainer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -73,6 +75,73 @@ class ApiEndpointsTest extends TestCase
         $response
             ->assertStatus(422)
             ->assertJsonValidationErrors(['login', 'password']);
+    }
+
+    public function test_login_returns_token_for_valid_credentials(): void
+    {
+        $this->postJson('/api/auth/register', [
+            'login' => 'loginok1',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+            'name' => 'Сергей Иванов',
+            'phone' => '+79990000001',
+            'email' => 'loginok1@example.com',
+        ])->assertStatus(201);
+
+        $this->postJson('/api/auth/login', [
+            'login' => 'loginok1',
+            'password' => 'secret123',
+        ])
+            ->assertOk()
+            ->assertJsonStructure([
+                'user' => ['id', 'login', 'name', 'email', 'phone'],
+                'token',
+            ])
+            ->assertJsonPath('user.login', 'loginok1');
+    }
+
+    public function test_login_rejects_invalid_credentials(): void
+    {
+        $this->postJson('/api/auth/register', [
+            'login' => 'loginbad1',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+            'name' => 'Алексей Петров',
+            'phone' => '+79990000002',
+            'email' => 'loginbad1@example.com',
+        ])->assertStatus(201);
+
+        $this->postJson('/api/auth/login', [
+            'login' => 'loginbad1',
+            'password' => 'wrong-pass',
+        ])
+            ->assertStatus(401)
+            ->assertJsonPath('message', 'Invalid credentials');
+    }
+
+    public function test_content_endpoints_are_available(): void
+    {
+        Article::create([
+            'title' => 'Статья 1',
+            'slug' => 'statya-1',
+            'excerpt' => 'excerpt',
+            'content' => 'content',
+            'published_at' => now(),
+        ]);
+
+        Review::create([
+            'user_name' => 'Иван',
+            'rating' => 5,
+            'comment' => 'Отличный зал',
+        ]);
+
+        $this->getJson('/api/articles')->assertOk()->assertJsonCount(1);
+        $this->getJson('/api/reviews')->assertOk()->assertJsonCount(1);
+        $this->postJson('/api/contacts', [
+            'name' => 'Клиент',
+            'phone_or_telegram' => '@client',
+            'goal' => 'Похудение',
+        ])->assertStatus(201);
     }
 
     public function test_catalog_endpoints_return_json_lists(): void
