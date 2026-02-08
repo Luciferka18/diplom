@@ -1,82 +1,38 @@
-import Link from 'next/link';
-import ApiPlayground from '@/components/ApiPlayground';
-import { apiBaseUrl } from '@/src/services/api';
+const features = [
+  {
+    title: 'Персональные программы',
+    description: 'Планы под цель: снижение веса, набор массы или поддержание формы.',
+  },
+  {
+    title: 'Профессиональные тренеры',
+    description: 'Тренеры с практическим опытом и поддержкой на каждом этапе.',
+  },
+  {
+    title: 'Магазин спортпита',
+    description: 'Добавки и продукты для восстановления и прогресса.',
+  },
+];
 
-async function getHomeData() {
-  try {
-    const response = await fetch(`${apiBaseUrl}/home`, { cache: 'no-store' });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    return response.json();
-  } catch {
-    return null;
-  }
-}
-
-export default async function HomePage() {
-  const data = await getHomeData();
-  const trainers = data?.trainers || [];
-  const programs = data?.programs || [];
-  const gym = data?.gym || { name: 'FitLab', description: 'API пока недоступен.' };
-
+export default function HomePage() {
   return (
     <main className="page">
-      <section className="hero card">
-        <p className="badge">FitLab • тестовый интерфейс</p>
-        <h1>{gym.name}</h1>
-        <p>{gym.description}</p>
-      </section>
+      <header className="hero">
+        <p className="badge">FitLab</p>
+        <h1>Фронтенд проекта готов к работе</h1>
+        <p>
+          Обновлён интерфейс и базовая структура Next.js. API-клиент использует единый
+          baseURL, чтобы избежать 404 на страницах деталей.
+        </p>
+      </header>
 
-      <section className="section">
-        <div className="section__head">
-          <h2>Тренеры</h2>
-          <p>Переходи на страницу тренера, чтобы проверить роут и API-запрос по id.</p>
-        </div>
-        <div className="grid">
-          {trainers.length > 0 ? (
-            trainers.map((trainer) => (
-              <article className="card" key={trainer.id}>
-                <h3>{trainer.name}</h3>
-                <p>{trainer.specialization || 'Специализация не указана'}</p>
-                <Link href={`/trainers/${trainer.id}`} className="button button--ghost">
-                  Открыть профиль
-                </Link>
-              </article>
-            ))
-          ) : (
-            <article className="card">
-              <h3>Нет данных о тренерах</h3>
-              <p>Заполни сидеры в backend или проверь доступность API.</p>
-            </article>
-          )}
-        </div>
+      <section className="grid">
+        {features.map((feature) => (
+          <article key={feature.title} className="card">
+            <h2>{feature.title}</h2>
+            <p>{feature.description}</p>
+          </article>
+        ))}
       </section>
-
-      <section className="section">
-        <div className="section__head">
-          <h2>Программы</h2>
-        </div>
-        <div className="grid">
-          {programs.length > 0 ? (
-            programs.map((program) => (
-              <article className="card" key={program.id}>
-                <h3>{program.title}</h3>
-                <p>{program.short_description || program.description || 'Описание скоро появится.'}</p>
-              </article>
-            ))
-          ) : (
-            <article className="card">
-              <h3>Нет данных о программах</h3>
-              <p>Добавь программы через сидер или админку.</p>
-            </article>
-          )}
-        </div>
-      </section>
-
-      <ApiPlayground />
     </main>
   );
 }
