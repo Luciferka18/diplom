@@ -12,13 +12,15 @@ class ApiEndpointsTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_register_returns_token_and_accepts_nullable_email_and_phone(): void
+    public function test_register_returns_token_with_required_email_and_phone(): void
     {
         $response = $this->postJson('/api/auth/register', [
-            'login' => 'new-user',
+            'login' => 'newuser1',
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
-            'name' => 'New User',
+            'name' => 'Иван Иванов',
+            'phone' => '+79991234567',
+            'email' => 'newuser1@example.com',
         ]);
 
         $response
@@ -27,14 +29,14 @@ class ApiEndpointsTest extends TestCase
                 'user' => ['id', 'login', 'name', 'email', 'phone'],
                 'token',
             ])
-            ->assertJsonPath('user.login', 'new-user')
-            ->assertJsonPath('user.email', null)
-            ->assertJsonPath('user.phone', null);
+            ->assertJsonPath('user.login', 'newuser1')
+            ->assertJsonPath('user.email', 'newuser1@example.com')
+            ->assertJsonPath('user.phone', '+79991234567');
 
         $this->assertDatabaseHas('users', [
-            'login' => 'new-user',
-            'email' => null,
-            'phone' => null,
+            'login' => 'newuser1',
+            'email' => 'newuser1@example.com',
+            'phone' => '+79991234567',
         ]);
     }
 
@@ -44,7 +46,33 @@ class ApiEndpointsTest extends TestCase
 
         $response
             ->assertStatus(422)
-            ->assertJsonValidationErrors(['login', 'password', 'name']);
+            ->assertJsonValidationErrors(['login', 'password', 'name', 'phone', 'email']);
+    }
+
+
+    public function test_register_validates_login_name_phone_and_email_format(): void
+    {
+        $response = $this->postJson('/api/auth/register', [
+            'login' => 'ab',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+            'name' => 'John Doe',
+            'phone' => '89991234567',
+            'email' => 'bad-email',
+        ]);
+
+        $response
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['login', 'name', 'phone', 'email']);
+    }
+
+    public function test_login_validates_required_fields(): void
+    {
+        $response = $this->postJson('/api/auth/login', []);
+
+        $response
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['login', 'password']);
     }
 
     public function test_catalog_endpoints_return_json_lists(): void
@@ -94,10 +122,12 @@ class ApiEndpointsTest extends TestCase
     public function test_authorized_user_can_add_items_to_cart(): void
     {
         $userResponse = $this->postJson('/api/auth/register', [
-            'login' => 'cart-user',
+            'login' => 'cartuser1',
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
-            'name' => 'Cart User',
+            'name' => 'Петр Петров',
+            'phone' => '+79997654321',
+            'email' => 'cartuser1@example.com',
         ]);
 
         $token = $userResponse->json('token');
