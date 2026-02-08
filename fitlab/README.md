@@ -1,66 +1,157 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# FitLab (Laravel API + Next.js frontend)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Проект: фитнес-платформа с разделами:
+- главная страница,
+- онлайн-программы,
+- тренеры,
+- магазин спортпита,
+- корзина и оформление заказа,
+- контакты.
 
-## About Laravel
+## 1) Что уже есть в backend (Laravel)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Бизнес-модули
+- `Auth`: регистрация/вход/выход (Sanctum token).
+- `Home`: агрегированные данные для главной.
+- `Programs`: онлайн-программы тренировок.
+- `Trainers`: каталог тренеров.
+- `Products`: каталог товаров.
+- `Cart`: корзина авторизованного пользователя.
+- `Orders`: оформление заказа (включая из корзины).
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Ключевые контроллеры
+- `app/Http/Controllers/Api/AuthController.php`
+- `app/Http/Controllers/Api/HomeController.php`
+- `app/Http/Controllers/Api/ProgramController.php`
+- `app/Http/Controllers/Api/TrainerController.php`
+- `app/Http/Controllers/Api/ProductController.php`
+- `app/Http/Controllers/Api/CartController.php`
+- `app/Http/Controllers/Api/OrderController.php`
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Ключевые модели
+- `app/Models/User.php`
+- `app/Models/Program.php`
+- `app/Models/Trainer.php`
+- `app/Models/Product.php`
+- `app/Models/Order.php`
+- `app/Models/OrderItem.php`
 
-## Learning Laravel
+## 2) API разделы (роуты)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Публичные:
+- `GET /api/home`
+- `GET /api/trainers`, `GET /api/trainers/{id}`
+- `GET /api/programs`, `GET /api/programs/{id}`
+- `GET /api/products`, `GET /api/products/{id}`
+- `POST /api/orders` (гостевой быстрый заказ)
+- `POST /api/auth/register`
+- `POST /api/auth/login`
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Только для авторизованных (Sanctum):
+- `POST /api/auth/logout`
+- `GET /api/cart`
+- `POST /api/cart/items`
+- `PATCH /api/cart/items/{itemId}`
+- `DELETE /api/cart/items/{itemId}`
+- `POST /api/cart/checkout`
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 3) Как связать Laravel с Next.js
 
-## Laravel Sponsors
+## Вариант A (рекомендуется для старта): Bearer token (Sanctum personal access token)
+1. Next отправляет `POST /api/auth/login`.
+2. Laravel возвращает `token`.
+3. Next хранит токен (лучше в httpOnly cookie через свой backend-route/proxy).
+4. Для защищённых запросов Next добавляет заголовок:
+   - `Authorization: Bearer <token>`
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Плюсы: просто и быстро.
 
-### Premium Partners
+## Вариант B: Sanctum SPA (cookie + CSRF)
+Подходит, если frontend и API на соседних доменах и нужен session-based auth.
+Для текущего проекта можно перейти позже.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+## 4) Рекомендуемая структура Next.js (app router)
 
-## Contributing
+```text
+app/
+  page.tsx                   # Главная
+  programs/page.tsx          # Онлайн-программы
+  programs/[slug]/page.tsx   # Детали программы
+  trainers/page.tsx          # Тренеры
+  shop/page.tsx              # Магазин
+  cart/page.tsx              # Корзина
+  contacts/page.tsx          # Контакты
+  login/page.tsx
+  register/page.tsx
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+lib/
+  api.ts                     # fetch-клиент
+  auth.ts                    # хранение/обновление токена
 
-## Code of Conduct
+components/
+  layout/
+  home/
+  programs/
+  trainers/
+  shop/
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 5) Что ещё можно добавить в проект
+- Личный кабинет пользователя: мои заказы, прогресс, избранные программы.
+- Календарь тренировок и бронирование занятий.
+- Фильтрация каталога (цель, уровень, цена, длительность).
+- Блог/статьи и SEO-страницы.
+- Админ-панель (CRUD для программ, тренеров, товаров, заказов).
 
-## Security Vulnerabilities
+## 6) Запуск Laravel API
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+cp .env.example .env
+composer install
+php artisan key:generate
+php artisan migrate --seed
+php artisan serve
+```
 
-## License
+## 7) Тесты
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan test
+```
+
+## 8) Публикация изменений в GitHub (Windows, простыми словами)
+
+Если ты сделал изменения локально, но не видишь их на GitHub, проверь шаги:
+
+```powershell
+cd D:\diplom
+git status
+git branch -vv
+git remote -v
+```
+
+Дальше стандартный цикл:
+
+```powershell
+git add .
+git commit -m "update diploma project"
+git push origin main
+```
+
+Если появляется окно **Authorize Git Credential Manager** — это нормально.
+Нажми **Authorize git-ecosystem** и повтори `git push`.
+
+Если ошибка `src refspec work does not match any`, значит ты пушишь ветку,
+которой нет локально. Либо пушь текущую:
+
+```powershell
+git push origin main
+```
+
+Либо сначала создай нужную ветку:
+
+```powershell
+git checkout -b work
+git push -u origin work
+```
+

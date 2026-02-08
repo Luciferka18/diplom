@@ -49,7 +49,7 @@ class FitlabSeeder extends Seeder
                 'level' => 'Начальный',
                 'duration_weeks' => 4,
                 'focus' => 'общая подготовка',
-                'slug' => 'start-v-fitnese',
+                'slug' => 'start-v-fitness',
                 'short_description' => 'Онлайн-программа для тех, кто только начинает.',
                 'description' => 'Пошаговые тренировки дома или в зале, без сложного оборудования.',
                 'muscle_groups' => 'Все тело, акцент на спину и ягодицы.',

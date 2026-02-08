@@ -12,11 +12,11 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $data = $request->validate([
-            'login' => 'required|unique:users',
+            'login' => 'required|string|max:255|unique:users,login',
             'password' => 'required|confirmed|min:6',
-            'name' => 'required',
-            'phone' => 'nullable',
-            'email' => 'nullable|email',
+            'name' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255|unique:users,email',
         ]);
 
         $user = User::create([
@@ -27,14 +27,19 @@ class AuthController extends Controller
             'email' => $data['email'] ?? null,
         ]);
 
-        return response()->json(['user' => $user]);
+        $token = $user->createToken('api-token')->plainTextToken;
+
+        return response()->json([
+            'user' => $user,
+            'token' => $token,
+        ], 201);
     }
 
     public function login(Request $request)
     {
         $data = $request->validate([
-            'login' => 'required',
-            'password' => 'required',
+            'login' => 'required|string',
+            'password' => 'required|string',
         ]);
 
         $user = User::where('login', $data['login'])->first();
@@ -43,6 +48,18 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        return response()->json(['user' => $user]);
+        $token = $user->createToken('api-token')->plainTextToken;
+
+        return response()->json([
+            'user' => $user,
+            'token' => $token,
+        ]);
+    }
+
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()?->delete();
+
+        return response()->json(['message' => 'Logged out']);
     }
 }
