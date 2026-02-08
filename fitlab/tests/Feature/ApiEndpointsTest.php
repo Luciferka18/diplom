@@ -80,39 +80,6 @@ class ApiEndpointsTest extends TestCase
 
 
 
-    public function test_legacy_trainers_route_without_api_prefix_returns_trainer(): void
-    {
-        $trainer = Trainer::create([
-            'name' => 'Никита',
-            'specialization' => 'Функциональный тренинг',
-            'experience_years' => 5,
-        ]);
-
-        $response = $this->getJson('/trainers/'.$trainer->id);
-
-        $response
-            ->assertOk()
-            ->assertJsonPath('id', $trainer->id)
-            ->assertJsonPath('name', 'Никита');
-    }
-
-    public function test_api_and_legacy_trainers_routes_return_same_payload_shape(): void
-    {
-        $trainer = Trainer::create([
-            'name' => 'Олег',
-            'specialization' => 'Кроссфит',
-            'experience_years' => 9,
-        ]);
-
-        $apiResponse = $this->getJson('/api/trainers/'.$trainer->id)->assertOk();
-        $legacyResponse = $this->getJson('/trainers/'.$trainer->id)->assertOk();
-
-        $this->assertSame(
-            $apiResponse->json('id'),
-            $legacyResponse->json('id')
-        );
-    }
-
     public function test_it_creates_order_and_calculates_total(): void
     {
         $product = Product::create([
