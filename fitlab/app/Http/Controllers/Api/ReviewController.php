@@ -8,6 +8,11 @@ use Illuminate\Http\Request;
 
 class ReviewController extends Controller
 {
+    public function index()
+    {
+        return Review::query()->latest()->get();
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([

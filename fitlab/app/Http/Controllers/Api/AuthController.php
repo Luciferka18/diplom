@@ -12,19 +12,19 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $data = $request->validate([
-            'login' => 'required|string|max:255|unique:users,login',
-            'password' => 'required|confirmed|min:6',
-            'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255|unique:users,email',
+            'login' => 'required|min:6|alpha_num|unique:users',
+            'password' => 'required|confirmed|min:8',
+            'name' => ['required', 'regex:/^[\p{Cyrillic} ]+$/u'],
+            'phone' => ['required', 'regex:/^\+7\d{10}$/'],
+            'email' => 'required|email|unique:users',
         ]);
 
         $user = User::create([
             'login' => $data['login'],
             'password' => Hash::make($data['password']),
             'name' => $data['name'],
-            'phone' => $data['phone'] ?? null,
-            'email' => $data['email'] ?? null,
+            'phone' => $data['phone'],
+            'email' => $data['email'],
         ]);
 
         $token = $user->createToken('api-token')->plainTextToken;
@@ -38,8 +38,8 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $data = $request->validate([
-            'login' => 'required|string',
-            'password' => 'required|string',
+            'login' => 'required',
+            'password' => 'required',
         ]);
 
         $user = User::where('login', $data['login'])->first();
