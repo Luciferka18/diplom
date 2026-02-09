@@ -14,14 +14,7 @@ function getToken() {
 
 async function request(path, { method = 'GET', body, headers } = {}) {
   const token = getToken();
-  const url = withBase(path);
-  const isRegister = path === '/auth/register';
-
-  if (isRegister) {
-    console.log('[api] register request', { method, url, body });
-  }
-
-  const res = await fetch(url, {
+  const res = await fetch(withBase(path), {
     method,
     headers: {
       ...(body && !(body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}),
