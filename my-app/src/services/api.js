@@ -1,7 +1,5 @@
 export const apiBaseUrl = '/api';
 
-const TOKEN_KEY = 'fitlab_token';
-
 function withBase(path) {
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
   return `${apiBaseUrl}${path.startsWith('/') ? path : `/${path}`}`;

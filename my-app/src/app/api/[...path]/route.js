@@ -27,6 +27,18 @@ async function proxyRequest(request, { params }) {
   const incomingUrl = new URL(request.url);
   const targetUrl = buildTargetUrl(params?.path, incomingUrl.searchParams);
 
+async function proxyRequest(request, ctx) {
+  const incomingUrl = new URL(request.url);
+
+  const rawParams = ctx?.params;
+  const resolvedParams = rawParams && typeof rawParams.then === 'function'
+    ? await rawParams
+    : rawParams;
+
+  const pathSegments = resolvedParams?.path || [];
+  const targetUrl = buildTargetUrl(pathSegments, incomingUrl.searchParams);
+
+
   const requestHeaders = new Headers(request.headers);
   requestHeaders.delete('host');
   requestHeaders.delete('connection');
