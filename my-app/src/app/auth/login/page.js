@@ -13,8 +13,8 @@ export default function LoginPage() {
   const submit = async e => {
     e.preventDefault();
     try {
-      const { data } = await api.post("/login", form);
-      localStorage.setItem("token", data.token);
+      const { data } = await api.post("/auth/login", form);
+      localStorage.setItem("fitlab_user", JSON.stringify(data.user || null));
       alert("Вход выполнен");
     } catch {
       alert("Ошибка входа");

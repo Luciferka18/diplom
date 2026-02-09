@@ -19,7 +19,7 @@ export default function ContactsPage() {
     e.preventDefault();
     setStatus(null);
     try {
-      await apiPost("/contact", form);
+      await apiPost("/contacts", form);
       setStatus({
         type: "success",
         message: "Заявка отправлена! Мы свяжемся с тобой.",

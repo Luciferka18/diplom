@@ -20,7 +20,7 @@ export default function RegisterPage() {
   const submit = async e => {
     e.preventDefault();
     try {
-      await api.post("/register", form);
+      await api.post("/auth/register", form);
       alert("Регистрация успешна");
     } catch (e) {
       alert("Ошибка регистрации");
