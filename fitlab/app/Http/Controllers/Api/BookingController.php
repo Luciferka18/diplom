@@ -23,6 +23,26 @@ class BookingController extends Controller
         return BookingResource::collection($query->paginate((int) $request->integer('per_page', 10)));
     }
 
+
+    public function next(Request $request)
+    {
+        $query = Booking::with(['trainer', 'location'])
+            ->where('starts_at', '>=', now())
+            ->orderBy('starts_at');
+
+        if ($request->user()->isTrainer() && $request->user()->trainerProfile) {
+            $query->where('trainer_id', $request->user()->trainerProfile->id);
+        } elseif (!$request->user()->isAdmin()) {
+            $query->where('user_id', $request->user()->id);
+        }
+
+        $booking = $query->first();
+
+        return response()->json([
+            'booking' => $booking ? new BookingResource($booking) : null,
+        ]);
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([

@@ -17,6 +17,8 @@ export default function RegisterPage() {
     e.preventDefault();
     const res = await apiPost("/auth/register", form);
     localStorage.setItem("user", JSON.stringify(res.user));
+      if (res.token) localStorage.setItem("fitlab_token", res.token);
+      if (res.user) localStorage.setItem("fitlab_user", JSON.stringify(res.user));
     location.href = "/";
   };
 

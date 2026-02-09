@@ -23,6 +23,10 @@ function buildTargetUrl(pathSegments = [], searchParams) {
   return url.toString();
 }
 
+async function proxyRequest(request, { params }) {
+  const incomingUrl = new URL(request.url);
+  const targetUrl = buildTargetUrl(params?.path, incomingUrl.searchParams);
+
 async function proxyRequest(request, ctx) {
   const incomingUrl = new URL(request.url);
 

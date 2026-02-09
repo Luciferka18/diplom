@@ -5,14 +5,21 @@ function withBase(path) {
   return `${apiBaseUrl}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
+function getToken() {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(TOKEN_KEY);
+}
+
 async function request(path, { method = 'GET', body, headers } = {}) {
+  const token = getToken();
   const res = await fetch(withBase(path), {
     method,
     headers: {
-      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(body && !(body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(headers || {}),
     },
-    body: body ? JSON.stringify(body) : undefined,
+    body: body ? (body instanceof FormData ? body : JSON.stringify(body)) : undefined,
     cache: 'no-store',
   });
 
