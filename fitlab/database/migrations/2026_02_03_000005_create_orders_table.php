@@ -10,11 +10,13 @@ return new class extends Migration {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('status')->default('created')->index();
+            $table->decimal('total_amount', 10, 2)->default(0);
+            $table->string('currency', 3)->default('RUB');
+            $table->string('payment_status')->default('pending')->index();
             $table->string('customer_name');
             $table->string('customer_phone');
             $table->string('customer_email')->nullable();
-            $table->decimal('total_amount', 10, 2)->default(0);
-            $table->string('status')->default('new');
             $table->timestamps();
         });
     }
@@ -24,5 +26,3 @@ return new class extends Migration {
         Schema::dropIfExists('orders');
     }
 };
-
-

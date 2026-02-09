@@ -9,14 +9,15 @@ class Trainer extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'name',
-        'specialization',
-        'experience_years',
-        'bio',
-        'photo_url',
-        'instagram',
-    ];
+    protected $fillable = ['name', 'specialization', 'experience_years', 'bio', 'photo_url', 'instagram', 'user_id'];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function reviews()
+    {
+        return $this->morphMany(Review::class, 'reviewable')->latest();
+    }
 }
-
-

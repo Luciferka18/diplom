@@ -3,7 +3,15 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { apiPost } from "@/services/api";
 
-const AuthContext = createContext(null);
+const defaultAuthState = {
+  user: null,
+  loading: false,
+  login: async () => {},
+  register: async () => {},
+  logout: async () => {},
+};
+
+const AuthContext = createContext(defaultAuthState);
 
 const STORAGE_KEY = "fitlab_user";
 
@@ -50,8 +58,4 @@ export function AuthProvider({ children }) {
   );
 }
 
-export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be inside AuthProvider");
-  return ctx;
-};
+export const useAuth = () => useContext(AuthContext) || defaultAuthState;
