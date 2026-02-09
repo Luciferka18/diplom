@@ -1,5 +1,7 @@
 export const apiBaseUrl = '/api';
 
+const TOKEN_KEY = 'fitlab_token';
+
 function withBase(path) {
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
   return `${apiBaseUrl}${path.startsWith('/') ? path : `/${path}`}`;
@@ -29,6 +31,10 @@ async function request(path, { method = 'GET', body, headers } = {}) {
     data = text ? JSON.parse(text) : null;
   } catch {
     data = text;
+  }
+
+  if (isRegister) {
+    console.log('[api] register response', { status: res.status, data });
   }
 
   if (!res.ok) {
