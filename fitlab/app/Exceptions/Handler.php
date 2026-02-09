@@ -32,13 +32,13 @@ class Handler extends ExceptionHandler
 
         $this->renderable(function (AuthenticationException $e, $request) {
             if ($request->is('api/*')) {
-                return response()->json(['message' => 'Unauthenticated'], 401);
+                return response()->json(['message' => 'Unauthenticated', 'errors' => (object) []], 401);
             }
         });
 
         $this->renderable(function (Throwable $e, $request) {
             if ($request->is('api/*') && $e instanceof HttpExceptionInterface) {
-                return response()->json(['message' => $e->getMessage() ?: 'HTTP error'], $e->getStatusCode());
+                return response()->json(['message' => $e->getMessage() ?: 'HTTP error', 'errors' => (object) []], $e->getStatusCode());
             }
         });
     }
