@@ -21,7 +21,7 @@ async function request(path, { method = "GET", body, headers } = {}) {
   try {
     data = text ? JSON.parse(text) : null;
   } catch {
-    data = text; // если сервер вернул не-JSON
+    data = text;
   }
 
   if (!res.ok) {
@@ -41,6 +41,10 @@ export const apiPut = (path, body, opts) =>
   request(path, { ...opts, method: "PUT", body });
 export const apiDelete = (path, opts) =>
   request(path, { ...opts, method: "DELETE" });
-
-// Иногда удобно иметь универсальную функцию
-export const api = { apiGet, apiPost, apiPut, apiDelete, apiBaseUrl };
+// axios-like wrapper, чтобы старые импорты { api } продолжали работать
+export const api = {
+  get: async (url, config = {}) => ({ data: await apiGet(url, config) }),
+  post: async (url, body, config = {}) => ({ data: await apiPost(url, body, config) }),
+  put: async (url, body, config = {}) => ({ data: await apiPut(url, body, config) }),
+  delete: async (url, config = {}) => ({ data: await apiDelete(url, config) }),
+};
