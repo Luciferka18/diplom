@@ -64,3 +64,30 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+
+## Frontend API base URL (Next.js)
+
+To avoid 404 errors from client requests like `/trainers/{id}`, configure the frontend axios instance to use `/api` as base URL and call relative resource paths.
+
+```js
+// src/services/api.js
+import axios from 'axios';
+
+export const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api',
+});
+
+export async function apiGet(url, config = {}) {
+  const res = await api.get(url, config);
+  return res.data;
+}
+```
+
+Example usage in pages/components:
+
+```js
+const trainer = await apiGet(`/trainers/${id}`);
+```
+
+With this setup the real request URL is `/api/trainers/${id}`.
