@@ -1,7 +1,16 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
 
-const CartContext = createContext();
+const defaultCartState = {
+  cart: [],
+  addToCart: () => {},
+  removeFromCart: () => {},
+  clearCart: () => {},
+  totalCount: 0,
+  totalPrice: 0,
+};
+
+const CartContext = createContext(defaultCartState);
 
 export function CartProvider({ children }) {
   const [cart, setCart] = useState([]);
@@ -51,4 +60,4 @@ export function CartProvider({ children }) {
   );
 }
 
-export const useCart = () => useContext(CartContext);
+export const useCart = () => useContext(CartContext) || defaultCartState;

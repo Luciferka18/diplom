@@ -19,10 +19,17 @@ export default function RegisterPage() {
 
   const submit = async e => {
     e.preventDefault();
+    console.log("[register] submit fired", { login: form.login, email: form.email });
+
     try {
-      await api.post("/auth/register", form);
+      const { data } = await api.post("/auth/register", form);
+      console.log("[register] success", data);
+
+      if (data?.token) localStorage.setItem("fitlab_token", data.token);
+      if (data?.user) localStorage.setItem("fitlab_user", JSON.stringify(data.user));
       alert("Регистрация успешна");
-    } catch (e) {
+    } catch (error) {
+      console.error("[register] failed", error);
       alert("Ошибка регистрации");
     }
   };
@@ -41,7 +48,7 @@ export default function RegisterPage() {
         placeholder="Повтор пароля"
         onChange={handleChange}
       />
-      <button>Зарегистрироваться</button>
+      <button type="submit">Зарегистрироваться</button>
     </form>
   );
 }

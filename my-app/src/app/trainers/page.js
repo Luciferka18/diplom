@@ -1,7 +1,14 @@
 import { apiGet } from "@/services/api";
 
 export default async function TrainersPage() {
-  const trainers = await apiGet("/trainers");
+  let trainers = [];
+  let backendMissing = false;
+
+  try {
+    trainers = await apiGet("/trainers");
+  } catch {
+    backendMissing = true;
+  }
 
   return (
     <div className="space-y-10">
@@ -9,6 +16,8 @@ export default async function TrainersPage() {
         <h1 className="text-3xl font-bold mb-2">Наши тренеры</h1>
         <p className="text-gray-500">Профессионалы, которые приведут тебя к результату</p>
       </div>
+
+      {backendMissing && <p>Not implemented on backend</p>}
 
       <div className="grid md:grid-cols-3 gap-6">
         {trainers.map(t => (

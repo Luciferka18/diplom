@@ -11,8 +11,8 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('order_id')->constrained()->cascadeOnDelete();
             $table->foreignId('product_id')->constrained()->restrictOnDelete();
-            $table->unsignedInteger('quantity')->default(1);
-            $table->decimal('price', 10, 2)->default(0);
+            $table->unsignedInteger('qty')->default(1);
+            $table->decimal('price_snapshot', 10, 2);
             $table->timestamps();
         });
     }
@@ -22,5 +22,3 @@ return new class extends Migration {
         Schema::dropIfExists('order_items');
     }
 };
-
-

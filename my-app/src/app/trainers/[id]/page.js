@@ -1,7 +1,17 @@
 import { apiGet } from '@/services/api';
 
 export default async function TrainerPage({ params }) {
-  const trainer = await apiGet(`/trainers/${params.id}`);
+  let trainer = null;
+
+  try {
+    trainer = await apiGet(`/trainers/${params.id}`);
+  } catch {
+    trainer = null;
+  }
+
+  if (!trainer) {
+    return <main className="container-fitlab py-10">Not implemented on backend</main>;
+  }
 
   return (
     <main className="container-fitlab py-10">
