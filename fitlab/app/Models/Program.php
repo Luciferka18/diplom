@@ -9,21 +9,20 @@ class Program extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'title',
-        'level',
-        'duration_weeks',
-        'focus',
-        'slug',
-        'short_description',
-        'description',
-        'muscle_groups',
-        'diet_recommendations',
-        'supplement_recommendations',
-        'workout_plan',
-        'price',
-        'is_active',
-    ];
+    protected $fillable = ['title', 'description', 'level', 'duration_weeks', 'price', 'trainer_id', 'image_url'];
+
+    public function trainer()
+    {
+        return $this->belongsTo(Trainer::class);
+    }
+
+    public function tags()
+    {
+        return $this->morphToMany(Tag::class, 'taggable');
+    }
+
+    public function reviews()
+    {
+        return $this->morphMany(Review::class, 'reviewable')->latest();
+    }
 }
-
-

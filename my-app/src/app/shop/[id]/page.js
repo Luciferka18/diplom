@@ -2,7 +2,17 @@ import { apiGet } from "@/services/api";
 import { AddToCartButton } from "@/components/AddToCartButton";
 
 export default async function ProductPage({ params }) {
-  const product = await apiGet(`/products/${params.id}`);
+  let product = null;
+
+  try {
+    product = await apiGet(`/products/${params.id}`);
+  } catch {
+    product = null;
+  }
+
+  if (!product) {
+    return <main className="container-fitlab py-10">Not implemented on backend</main>;
+  }
 
   return (
     <main className="container-fitlab py-10">

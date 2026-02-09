@@ -1,8 +1,18 @@
 const backendOrigin = process.env.BACKEND_ORIGIN || 'http://127.0.0.1:8000';
+const backendApiPrefix = process.env.BACKEND_API_PREFIX || '/api';
 
-function buildTargetUrl(pathSegments, searchParams) {
-  const path = Array.isArray(pathSegments) ? pathSegments.join('/') : '';
-  const url = new URL(`${backendOrigin.replace(/\/$/, '')}/api/${path}`);
+function normalizePrefix(prefix) {
+  if (!prefix) return '';
+  const withSlash = prefix.startsWith('/') ? prefix : `/${prefix}`;
+  return withSlash.replace(/\/+$/, '');
+}
+
+function buildTargetUrl(pathSegments = [], searchParams) {
+  const joined = Array.isArray(pathSegments) ? pathSegments.join('/') : '';
+  const base = backendOrigin.replace(/\/+$/, '');
+  const prefix = normalizePrefix(backendApiPrefix);
+  const path = joined ? `/${joined}` : '';
+  const url = new URL(`${base}${prefix}${path}`);
 
   if (searchParams) {
     for (const [key, value] of searchParams.entries()) {
@@ -13,41 +23,40 @@ function buildTargetUrl(pathSegments, searchParams) {
   return url.toString();
 }
 
-async function proxyRequest(request, context) {
-  const { path } = await context.params;
+async function proxyRequest(request, { params }) {
   const incomingUrl = new URL(request.url);
-  const targetUrl = buildTargetUrl(path, incomingUrl.searchParams);
+  const targetUrl = buildTargetUrl(params?.path, incomingUrl.searchParams);
 
-  const headers = {
-    Accept: 'application/json',
-    'Content-Type': request.headers.get('content-type') || 'application/json',
-    Authorization: request.headers.get('authorization') || '',
-  };
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.delete('host');
+  requestHeaders.delete('connection');
+  requestHeaders.delete('content-length');
 
   const init = {
     method: request.method,
-    headers,
+    headers: requestHeaders,
+    body: ['GET', 'HEAD'].includes(request.method) ? undefined : await request.arrayBuffer(),
+    redirect: 'manual',
     cache: 'no-store',
   };
 
-  if (!['GET', 'HEAD'].includes(request.method)) {
-    init.body = await request.text();
-  }
-
   try {
     const backendResponse = await fetch(targetUrl, init);
-    const text = await backendResponse.text();
+    const responseHeaders = new Headers(backendResponse.headers);
+    responseHeaders.delete('content-encoding');
+    responseHeaders.delete('transfer-encoding');
 
-    return new Response(text, {
+    return new Response(backendResponse.body, {
       status: backendResponse.status,
-      headers: {
-        'Content-Type': backendResponse.headers.get('content-type') || 'application/json; charset=utf-8',
-      },
+      statusText: backendResponse.statusText,
+      headers: responseHeaders,
     });
-  } catch {
+  } catch (error) {
     return Response.json(
       {
-        message: 'Backend API is unavailable',
+        ok: false,
+        error: 'Backend API is unavailable',
+        details: error.message,
         backendOrigin,
       },
       { status: 503 },
