@@ -1,4 +1,25 @@
-import { apiGet } from '@/services/api';
+import { headers } from 'next/headers';
+
+async function loadTrainer(id) {
+  const hdrs = await headers();
+  const host = hdrs.get('host') || 'localhost:3000';
+  const protocol = host.includes('localhost') || host.startsWith('127.0.0.1') ? 'http' : 'https';
+  const response = await fetch(`${protocol}://${host}/api/trainers/${id}`, { cache: 'no-store' });
+
+  if (response.status === 404) {
+    const error = new Error('Trainer not found');
+    error.status = 404;
+    throw error;
+  }
+
+  if (!response.ok) {
+    const error = new Error(`Failed to load trainer (${response.status})`);
+    error.status = response.status;
+    throw error;
+  }
+
+  return response.json();
+}
 
 export default async function TrainerPage({ params }) {
   let trainer = null;
