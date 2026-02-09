@@ -13,6 +13,8 @@ export default function LoginPage() {
     try {
       const res = await apiPost("/auth/login", { login, password });
       localStorage.setItem("user", JSON.stringify(res.user));
+      if (res.token) localStorage.setItem("fitlab_token", res.token);
+      if (res.user) localStorage.setItem("fitlab_user", JSON.stringify(res.user));
       location.href = "/";
     } catch {
       setError("Неверный логин или пароль");

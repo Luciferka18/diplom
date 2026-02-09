@@ -9,15 +9,17 @@ return new class extends Migration {
     {
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('trainer_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('trainer_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('location_id')->constrained('gym_locations')->restrictOnDelete();
             $table->string('client_name');
             $table->string('client_phone');
             $table->text('client_comment')->nullable();
-            $table->date('date');
-            $table->time('time');
-            $table->string('status')->default('new');
+            $table->dateTime('starts_at')->index();
+            $table->dateTime('ends_at')->index();
+            $table->enum('status', ['booked', 'cancelled', 'completed'])->default('booked')->index();
             $table->timestamps();
+            $table->index(['trainer_id', 'starts_at', 'ends_at']);
         });
     }
 
@@ -26,5 +28,3 @@ return new class extends Migration {
         Schema::dropIfExists('bookings');
     }
 };
-
-

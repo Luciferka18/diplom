@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Providers from './providers';
 import './globals.css';
 
 export const metadata = {
@@ -16,7 +17,7 @@ export default function RootLayout({ children }) {
             <Link className="button button--ghost" href="/">Главная</Link>
           </div>
         </header>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

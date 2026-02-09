@@ -9,13 +9,5 @@ class GymLocation extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'name',
-        'address',
-        'schedule',
-        'phone',
-        'map_embed_url',
-    ];
+    protected $fillable = ['name', 'address'];
 }
-
-
