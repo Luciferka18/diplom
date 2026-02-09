@@ -2,24 +2,9 @@ export const apiBaseUrl = '/api';
 
 const TOKEN_KEY = 'fitlab_token';
 
-function getServerOrigin() {
-  if (typeof window !== 'undefined') return '';
-  if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return 'http://localhost:3000';
-}
-
 function withBase(path) {
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
-
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  const normalizedBase = `${apiBaseUrl}${normalizedPath}`;
-
-  if (typeof window === 'undefined' && normalizedBase.startsWith('/')) {
-    return `${getServerOrigin()}${normalizedBase}`;
-  }
-
-  return normalizedBase;
+  return `${apiBaseUrl}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
 function getToken() {
@@ -29,14 +14,7 @@ function getToken() {
 
 async function request(path, { method = 'GET', body, headers } = {}) {
   const token = getToken();
-  const url = withBase(path);
-  const isRegister = path === '/auth/register';
-
-  if (isRegister) {
-    console.log('[api] register request', { method, url, body });
-  }
-
-  const res = await fetch(url, {
+  const res = await fetch(withBase(path), {
     method,
     headers: {
       ...(body && !(body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}),
@@ -63,10 +41,7 @@ async function request(path, { method = 'GET', body, headers } = {}) {
     const message =
       (data && (data.message || data.error)) ||
       `API ${method} ${path} failed (${res.status})`;
-    const error = new Error(message);
-    error.status = res.status;
-    error.payload = data;
-    throw error;
+    throw new Error(message);
   }
 
   return data;
