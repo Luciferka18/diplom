@@ -11,9 +11,6 @@ return new class extends Migration {
             $table->id();
             $table->string('name');
             $table->string('address');
-            $table->string('schedule')->nullable();
-            $table->string('phone')->nullable();
-            $table->string('map_embed_url')->nullable();
             $table->timestamps();
         });
     }
@@ -23,5 +20,3 @@ return new class extends Migration {
         Schema::dropIfExists('gym_locations');
     }
 };
-
-

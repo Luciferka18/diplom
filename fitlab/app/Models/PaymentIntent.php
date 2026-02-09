@@ -5,19 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class OrderItem extends Model
+class PaymentIntent extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['order_id', 'product_id', 'qty', 'price_snapshot'];
+    protected $fillable = ['order_id', 'provider', 'status', 'client_secret', 'idempotency_key', 'confirmed_at'];
+
+    protected $casts = ['confirmed_at' => 'datetime'];
 
     public function order()
     {
         return $this->belongsTo(Order::class);
-    }
-
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
     }
 }

@@ -9,19 +9,13 @@ return new class extends Migration {
     {
         Schema::create('programs', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('trainer_id')->nullable()->constrained()->nullOnDelete();
             $table->string('title');
-            $table->string('level')->nullable();
+            $table->text('description');
+            $table->string('level')->index();
             $table->unsignedTinyInteger('duration_weeks')->nullable();
-            $table->string('focus')->nullable();
-            $table->string('slug')->unique();
-            $table->text('short_description')->nullable();
-            $table->longText('description')->nullable();
-            $table->text('muscle_groups')->nullable(); // какие группы мышц развиваем
-            $table->longText('diet_recommendations')->nullable(); // рекомендации по питанию
-            $table->longText('supplement_recommendations')->nullable(); // рекомендуемый спортпит
-            $table->longText('workout_plan')->nullable(); // общий план тренировок
             $table->decimal('price', 10, 2)->default(0);
-            $table->boolean('is_active')->default(true);
+            $table->string('image_url')->nullable();
             $table->timestamps();
         });
     }
@@ -31,5 +25,3 @@ return new class extends Migration {
         Schema::dropIfExists('programs');
     }
 };
-
-
