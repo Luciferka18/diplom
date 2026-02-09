@@ -1,24 +1,46 @@
-import axios from 'axios';
+// src/services/api.js
 
-const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+export const apiBaseUrl =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export const api = axios.create({
-  baseURL,
-  timeout: 15000,
-  headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-  },
-});
+async function request(path, { method = "GET", body, headers } = {}) {
+  const url = path.startsWith("http") ? path : `${apiBaseUrl}${path}`;
 
-export async function apiGet(url, config = {}) {
-  const res = await api.get(url, config);
-  return res.data;
+  const res = await fetch(url, {
+    method,
+    headers: {
+      ...(body ? { "Content-Type": "application/json" } : {}),
+      ...(headers || {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+    cache: "no-store",
+  });
+
+  const text = await res.text();
+  let data;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = text; // если сервер вернул не-JSON
+  }
+
+  if (!res.ok) {
+    const msg =
+      (data && (data.message || data.error)) ||
+      `API ${method} ${path} failed (${res.status})`;
+    throw new Error(msg);
+  }
+
+  return data;
 }
 
-export async function apiPost(url, payload = {}, config = {}) {
-  const res = await api.post(url, payload, config);
-  return res.data;
-}
+export const apiGet = (path, opts) => request(path, { ...opts, method: "GET" });
+export const apiPost = (path, body, opts) =>
+  request(path, { ...opts, method: "POST", body });
+export const apiPut = (path, body, opts) =>
+  request(path, { ...opts, method: "PUT", body });
+export const apiDelete = (path, opts) =>
+  request(path, { ...opts, method: "DELETE" });
 
-export const apiBaseUrl = baseURL;
+// Иногда удобно иметь универсальную функцию
+export const api = { apiGet, apiPost, apiPut, apiDelete, apiBaseUrl };
