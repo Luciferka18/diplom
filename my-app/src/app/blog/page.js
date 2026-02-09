@@ -2,7 +2,15 @@ import { ArticleCard } from "../../components/ArticleCard";
 import { apiGet } from "../../services/api";
 
 export default async function BlogPage() {
-  const articles = await apiGet("/articles");
+  let articles = [];
+  let backendMissing = false;
+
+  try {
+    articles = await apiGet("/articles");
+  } catch {
+    backendMissing = true;
+  }
+
   return (
     <div className="py-14">
       <div className="container-fitlab">
@@ -15,6 +23,8 @@ export default async function BlogPage() {
           </p>
         </div>
 
+        {backendMissing && <p>Not implemented on backend</p>}
+
         <div className="grid gap-6 md:grid-cols-3">
           {articles.map((article) => (
             <ArticleCard key={article.slug} article={article} />
@@ -24,4 +34,3 @@ export default async function BlogPage() {
     </div>
   );
 }
-
