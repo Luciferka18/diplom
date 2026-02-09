@@ -3,9 +3,18 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { apiPost } from "@/services/api";
 
-const AuthContext = createContext(null);
+const defaultAuthState = {
+  user: null,
+  loading: false,
+  login: async () => {},
+  register: async () => {},
+  logout: async () => {},
+};
+
+const AuthContext = createContext(defaultAuthState);
 
 const STORAGE_KEY = "fitlab_user";
+const TOKEN_KEY = "fitlab_token";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -28,6 +37,9 @@ export function AuthProvider({ children }) {
     if (data.user) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data.user));
     }
+    if (data.token) {
+      localStorage.setItem(TOKEN_KEY, data.token);
+    }
   };
 
   const register = async (payload) => {
@@ -36,11 +48,18 @@ export function AuthProvider({ children }) {
     if (data.user) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data.user));
     }
+    if (data.token) {
+      localStorage.setItem(TOKEN_KEY, data.token);
+    }
   };
 
   const logout = async () => {
+    try {
+      await apiPost("/auth/logout");
+    } catch {}
     setUser(null);
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(TOKEN_KEY);
   };
 
   return (
@@ -50,8 +69,4 @@ export function AuthProvider({ children }) {
   );
 }
 
-export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be inside AuthProvider");
-  return ctx;
-};
+export const useAuth = () => useContext(AuthContext) || defaultAuthState;

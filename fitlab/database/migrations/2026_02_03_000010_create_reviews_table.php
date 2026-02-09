@@ -9,9 +9,10 @@ return new class extends Migration {
     {
         Schema::create('reviews', function (Blueprint $table) {
             $table->id();
-            $table->string('user_name');
-            $table->unsignedTinyInteger('rating')->default(5);
-            $table->text('comment')->nullable();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->morphs('reviewable');
+            $table->unsignedTinyInteger('rating');
+            $table->text('text');
             $table->timestamps();
         });
     }
@@ -21,5 +22,3 @@ return new class extends Migration {
         Schema::dropIfExists('reviews');
     }
 };
-
-
