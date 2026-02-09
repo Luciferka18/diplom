@@ -1,34 +1,46 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { apiGet, apiPost } from "@/services/api";
+import { apiPost } from "@/services/api";
 
 const AuthContext = createContext(null);
+
+const STORAGE_KEY = "fitlab_user";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiGet("/auth/me")
-      .then(setUser)
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      setUser(raw ? JSON.parse(raw) : null);
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const login = async (email, password) => {
-    const data = await apiPost("/auth/login", { email, password });
-    setUser(data.user);
+  const login = async (loginValue, password) => {
+    const data = await apiPost("/auth/login", { login: loginValue, password });
+    setUser(data.user || null);
+    if (data.user) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data.user));
+    }
   };
 
   const register = async (payload) => {
     const data = await apiPost("/auth/register", payload);
-    setUser(data.user);
+    setUser(data.user || null);
+    if (data.user) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data.user));
+    }
   };
 
   const logout = async () => {
-    await apiPost("/auth/logout");
     setUser(null);
+    localStorage.removeItem(STORAGE_KEY);
   };
 
   return (

@@ -1,19 +1,29 @@
-// src/services/api.js
+const defaultApiBaseUrl = '/api';
 
 export const apiBaseUrl =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  defaultApiBaseUrl;
 
-async function request(path, { method = "GET", body, headers } = {}) {
-  const url = path.startsWith("http") ? path : `${apiBaseUrl}${path}`;
+function withBase(path) {
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  if (apiBaseUrl.startsWith('http://') || apiBaseUrl.startsWith('https://')) {
+    return `${apiBaseUrl.replace(/\/$/, '')}${path}`;
+  }
+  return `${apiBaseUrl.replace(/\/$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
+}
+
+async function request(path, { method = 'GET', body, headers } = {}) {
+  const url = withBase(path);
 
   const res = await fetch(url, {
     method,
     headers: {
-      ...(body ? { "Content-Type": "application/json" } : {}),
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
       ...(headers || {}),
     },
     body: body ? JSON.stringify(body) : undefined,
-    cache: "no-store",
+    cache: 'no-store',
   });
 
   const text = await res.text();
@@ -34,14 +44,14 @@ async function request(path, { method = "GET", body, headers } = {}) {
   return data;
 }
 
-export const apiGet = (path, opts) => request(path, { ...opts, method: "GET" });
+export const apiGet = (path, opts) => request(path, { ...opts, method: 'GET' });
 export const apiPost = (path, body, opts) =>
-  request(path, { ...opts, method: "POST", body });
+  request(path, { ...opts, method: 'POST', body });
 export const apiPut = (path, body, opts) =>
-  request(path, { ...opts, method: "PUT", body });
+  request(path, { ...opts, method: 'PUT', body });
 export const apiDelete = (path, opts) =>
-  request(path, { ...opts, method: "DELETE" });
-// axios-like wrapper, чтобы старые импорты { api } продолжали работать
+  request(path, { ...opts, method: 'DELETE' });
+
 export const api = {
   get: async (url, config = {}) => ({ data: await apiGet(url, config) }),
   post: async (url, body, config = {}) => ({ data: await apiPost(url, body, config) }),
