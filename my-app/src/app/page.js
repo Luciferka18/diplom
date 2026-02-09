@@ -1,115 +1,73 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import ApiPlayground from '@/components/ApiPlayground';
+import { useEffect, useState } from 'react';
 
-const fallbackData = {
-  gym: { name: 'FitLab', description: 'API пока недоступен. Можно тестировать формы ниже.' },
-  trainers: [],
-  programs: [],
-};
-
-async function getHomeDataWithTimeout(timeoutMs = 4000) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    const response = await fetch('/api/home', {
-      cache: 'no-store',
-      signal: controller.signal,
-    });
-
-    if (!response.ok) {
-      return fallbackData;
-    }
-
-    return response.json();
-  } catch {
-    return fallbackData;
-  } finally {
-    clearTimeout(timer);
-  }
-}
+const routes = [
+  '/programs',
+  '/trainers',
+  '/shop',
+  '/blog',
+  '/contacts',
+  '/cart',
+  '/dashboard',
+  '/auth/login',
+  '/auth/register',
+];
 
 export default function HomePage() {
-  const [data, setData] = useState(fallbackData);
-  const [isLoading, setIsLoading] = useState(true);
+  const [status, setStatus] = useState({ state: 'loading', message: 'Checking backend...' });
 
   useEffect(() => {
-    let mounted = true;
+    let active = true;
 
-    getHomeDataWithTimeout().then((nextData) => {
-      if (!mounted) return;
-      setData(nextData || fallbackData);
-      setIsLoading(false);
-    });
+    fetch('/api/health', { cache: 'no-store' })
+      .then(async (response) => {
+        const payload = await response.json().catch(() => ({}));
+        if (!active) return;
+
+        if (response.ok && payload?.ok) {
+          setStatus({ state: 'ok', message: payload.message || 'Backend is reachable' });
+          return;
+        }
+
+        setStatus({
+          state: 'error',
+          message: payload?.error || payload?.message || `Health check failed (${response.status})`,
+        });
+      })
+      .catch((error) => {
+        if (!active) return;
+        setStatus({ state: 'error', message: error.message || 'Network error' });
+      });
 
     return () => {
-      mounted = false;
+      active = false;
     };
   }, []);
 
-  const trainers = data?.trainers || [];
-  const programs = data?.programs || [];
-  const gym = data?.gym || fallbackData.gym;
-
   return (
     <main className="page">
-      <section className="hero card">
-        <p className="badge">FitLab • тестовый интерфейс</p>
-        <h1>{gym.name}</h1>
-        <p>{gym.description}</p>
-        {isLoading && <p>Загружаем данные...</p>}
+      <section className="card" style={{ marginBottom: 16 }}>
+        <h1>FitLab Home (Smoke Test)</h1>
+        <p>Быстрые ссылки для проверки UI и роутинга.</p>
+        <ul>
+          {routes.map((route) => (
+            <li key={route}>
+              <Link href={route}>{route}</Link>
+            </li>
+          ))}
+        </ul>
       </section>
 
-      <section className="section">
-        <div className="section__head">
-          <h2>Тренеры</h2>
-          <p>Переходи на страницу тренера, чтобы проверить роут и API-запрос по id.</p>
-        </div>
-        <div className="grid">
-          {trainers.length > 0 ? (
-            trainers.map((trainer) => (
-              <article className="card" key={trainer.id}>
-                <h3>{trainer.name}</h3>
-                <p>{trainer.specialization || 'Специализация не указана'}</p>
-                <Link href={`/trainers/${trainer.id}`} className="button button--ghost">
-                  Открыть профиль
-                </Link>
-              </article>
-            ))
-          ) : (
-            <article className="card">
-              <h3>Нет данных о тренерах</h3>
-              <p>Заполни сидеры в backend или проверь доступность API.</p>
-            </article>
-          )}
-        </div>
+      <section className="card">
+        <h2>Backend status</h2>
+        <p>
+          {status.state === 'loading' && 'Checking...'}
+          {status.state === 'ok' && `OK: ${status.message}`}
+          {status.state === 'error' && `ERROR: ${status.message}`}
+        </p>
       </section>
-
-      <section className="section">
-        <div className="section__head">
-          <h2>Программы</h2>
-        </div>
-        <div className="grid">
-          {programs.length > 0 ? (
-            programs.map((program) => (
-              <article className="card" key={program.id}>
-                <h3>{program.title}</h3>
-                <p>{program.short_description || program.description || 'Описание скоро появится.'}</p>
-              </article>
-            ))
-          ) : (
-            <article className="card">
-              <h3>Нет данных о программах</h3>
-              <p>Добавь программы через сидер или админку.</p>
-            </article>
-          )}
-        </div>
-      </section>
-
-      <ApiPlayground />
     </main>
   );
 }

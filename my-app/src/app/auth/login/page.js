@@ -15,6 +15,7 @@ export default function LoginPage() {
     try {
       const { data } = await api.post("/auth/login", form);
       localStorage.setItem("fitlab_user", JSON.stringify(data.user || null));
+      if (data.token) localStorage.setItem("fitlab_token", data.token);
       alert("Вход выполнен");
     } catch {
       alert("Ошибка входа");

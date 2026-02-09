@@ -15,9 +15,19 @@ export default function RegisterPage() {
 
   const submit = async (e) => {
     e.preventDefault();
-    const res = await apiPost("/auth/register", form);
-    localStorage.setItem("user", JSON.stringify(res.user));
-    location.href = "/";
+    console.log("[register-legacy] submit fired", { login: form.login, email: form.email });
+
+    try {
+      const res = await apiPost("/auth/register", form);
+      console.log("[register-legacy] success", res);
+
+      localStorage.setItem("user", JSON.stringify(res.user));
+      if (res.token) localStorage.setItem("fitlab_token", res.token);
+      if (res.user) localStorage.setItem("fitlab_user", JSON.stringify(res.user));
+      location.href = "/";
+    } catch (error) {
+      console.error("[register-legacy] failed", error);
+    }
   };
 
   return (
@@ -54,7 +64,7 @@ export default function RegisterPage() {
           className="w-full border rounded px-3 py-2"
         />
 
-        <button className="w-full bg-[#2D6033] text-white py-2 rounded hover:opacity-90">
+        <button type="submit" className="w-full bg-[#2D6033] text-white py-2 rounded hover:opacity-90">
           Создать аккаунт
         </button>
       </form>

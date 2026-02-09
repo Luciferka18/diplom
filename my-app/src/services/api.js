@@ -1,28 +1,49 @@
-const defaultApiBaseUrl = '/api';
+export const apiBaseUrl = '/api';
 
-export const apiBaseUrl =
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  defaultApiBaseUrl;
+const TOKEN_KEY = 'fitlab_token';
+
+function getServerOrigin() {
+  if (typeof window !== 'undefined') return '';
+  if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return 'http://localhost:3000';
+}
 
 function withBase(path) {
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
-  if (apiBaseUrl.startsWith('http://') || apiBaseUrl.startsWith('https://')) {
-    return `${apiBaseUrl.replace(/\/$/, '')}${path}`;
+
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const normalizedBase = `${apiBaseUrl}${normalizedPath}`;
+
+  if (typeof window === 'undefined' && normalizedBase.startsWith('/')) {
+    return `${getServerOrigin()}${normalizedBase}`;
   }
-  return `${apiBaseUrl.replace(/\/$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
+
+  return normalizedBase;
+}
+
+function getToken() {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(TOKEN_KEY);
 }
 
 async function request(path, { method = 'GET', body, headers } = {}) {
+  const token = getToken();
   const url = withBase(path);
+  const isRegister = path === '/auth/register';
+
+  if (isRegister) {
+    console.log('[api] register request', { method, url, body });
+  }
 
   const res = await fetch(url, {
     method,
     headers: {
-      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(body && !(body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(headers || {}),
     },
-    body: body ? JSON.stringify(body) : undefined,
+    body: body ? (body instanceof FormData ? body : JSON.stringify(body)) : undefined,
     cache: 'no-store',
   });
 
@@ -34,27 +55,31 @@ async function request(path, { method = 'GET', body, headers } = {}) {
     data = text;
   }
 
+  if (isRegister) {
+    console.log('[api] register response', { status: res.status, data });
+  }
+
   if (!res.ok) {
-    const msg =
+    const message =
       (data && (data.message || data.error)) ||
       `API ${method} ${path} failed (${res.status})`;
-    throw new Error(msg);
+    const error = new Error(message);
+    error.status = res.status;
+    error.payload = data;
+    throw error;
   }
 
   return data;
 }
 
-export const apiGet = (path, opts) => request(path, { ...opts, method: 'GET' });
-export const apiPost = (path, body, opts) =>
-  request(path, { ...opts, method: 'POST', body });
-export const apiPut = (path, body, opts) =>
-  request(path, { ...opts, method: 'PUT', body });
-export const apiDelete = (path, opts) =>
-  request(path, { ...opts, method: 'DELETE' });
+export const apiGet = (path, options) => request(path, { ...options, method: 'GET' });
+export const apiPost = (path, body, options) => request(path, { ...options, method: 'POST', body });
+export const apiPut = (path, body, options) => request(path, { ...options, method: 'PUT', body });
+export const apiDelete = (path, options) => request(path, { ...options, method: 'DELETE' });
 
 export const api = {
-  get: async (url, config = {}) => ({ data: await apiGet(url, config) }),
-  post: async (url, body, config = {}) => ({ data: await apiPost(url, body, config) }),
-  put: async (url, body, config = {}) => ({ data: await apiPut(url, body, config) }),
-  delete: async (url, config = {}) => ({ data: await apiDelete(url, config) }),
+  get: async (path, options = {}) => ({ data: await apiGet(path, options) }),
+  post: async (path, body, options = {}) => ({ data: await apiPost(path, body, options) }),
+  put: async (path, body, options = {}) => ({ data: await apiPut(path, body, options) }),
+  delete: async (path, options = {}) => ({ data: await apiDelete(path, options) }),
 };

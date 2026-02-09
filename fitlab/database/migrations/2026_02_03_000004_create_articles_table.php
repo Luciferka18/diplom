@@ -9,10 +9,11 @@ return new class extends Migration {
     {
         Schema::create('articles', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('author_user_id')->constrained('users')->cascadeOnDelete();
             $table->string('title');
             $table->string('slug')->unique();
-            $table->string('excerpt')->nullable();
-            $table->longText('content')->nullable();
+            $table->longText('content');
+            $table->enum('status', ['draft', 'published'])->default('published')->index();
             $table->timestamp('published_at')->nullable();
             $table->timestamps();
         });
@@ -23,5 +24,3 @@ return new class extends Migration {
         Schema::dropIfExists('articles');
     }
 };
-
-
