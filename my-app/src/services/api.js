@@ -14,14 +14,7 @@ function getToken() {
 
 async function request(path, { method = 'GET', body, headers } = {}) {
   const token = getToken();
-  const url = withBase(path);
-  const isRegister = path === '/auth/register';
-
-  if (isRegister) {
-    console.log('[api] register request', { method, url, body });
-  }
-
-  const res = await fetch(url, {
+  const res = await fetch(withBase(path), {
     method,
     headers: {
       ...(body && !(body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}),
@@ -48,10 +41,7 @@ async function request(path, { method = 'GET', body, headers } = {}) {
     const message =
       (data && (data.message || data.error)) ||
       `API ${method} ${path} failed (${res.status})`;
-    const error = new Error(message);
-    error.status = res.status;
-    error.payload = data;
-    throw error;
+    throw new Error(message);
   }
 
   return data;

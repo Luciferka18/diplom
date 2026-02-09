@@ -11,7 +11,7 @@ class HealthController extends Controller
         return response()->json([
             'ok' => true,
             'time' => now()->toIso8601String(),
-            'version' => '1.0',
+            'version' => config('app.version', '1.0.0'),
         ]);
     }
 }
