@@ -38,8 +38,8 @@ export default function HomePage() {
     <>
       <Section className="pt-12 md:pt-16 pb-8 md:pb-10">
         <div className="mx-auto max-w-5xl text-center">
-          <Badge className="mb-4 border-emerald-300/25 bg-emerald-400/10 text-emerald-100">Новая энергия FitLab</Badge>
-          <h1 className="text-5xl md:text-6xl font-black leading-tight bg-gradient-to-r from-emerald-300 via-cyan-200 to-emerald-400 bg-clip-text text-transparent">
+          <Badge className="mb-4">Новая энергия FitLab</Badge>
+          <h1 className="text-5xl md:text-6xl font-black leading-tight text-[color:var(--text)]">
             Единая fitness-платформа для тренировок, питания и прогресса
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base md:text-lg text-[color:var(--muted)]">
@@ -96,12 +96,12 @@ export default function HomePage() {
               href={item.href}
               className={`${item.span} h-full group p-6 relative overflow-hidden`}
             >
-              <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-cyan-300/10 blur-2xl opacity-0 transition-opacity group-hover:opacity-100" />
+              <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[color:var(--panel)] opacity-0 transition-opacity group-hover:opacity-100" />
               <div className="flex h-full flex-col relative">
                 <div className="mb-3 text-2xl" aria-hidden="true">{item.icon}</div>
                 <div className="text-xl font-bold">{item.title}</div>
                 <p className="mt-2 flex-1 text-[color:var(--muted)]">{item.text}</p>
-                <div className="mt-5 inline-flex items-center gap-2 font-semibold text-emerald-200 group-hover:text-[color:var(--text)] transition">
+                <div className="mt-5 inline-flex items-center gap-2 font-semibold text-[color:var(--accent)] group-hover:text-[color:var(--text)] transition">
                   {item.cta} <span className="transition-transform group-hover:translate-x-1">→</span>
                 </div>
               </div>

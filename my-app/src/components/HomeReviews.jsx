@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
-import { Textarea } from "@/components/ui/Input.jsx";
+import { Textarea } from "@/components/ui/Input";
 
 function Stars({ value = 0 }) {
   const v = Math.max(0, Math.min(5, Number(value) || 0));
@@ -179,7 +179,7 @@ export default function HomeReviews() {
             <Card key={r.id} className="group bg-[color:var(--panel)] border-[color:var(--stroke)]">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="h-10 w-10 shrink-0 rounded-full bg-gradient-to-br from-emerald-400/80 to-green-600/80 text-sm font-bold text-[color:var(--text)] flex items-center justify-center">
+                  <div className="h-10 w-10 shrink-0 rounded-full bg-[color:var(--accent)] text-sm font-bold text-white flex items-center justify-center">
                     {(r.userName || "П").trim().charAt(0).toUpperCase()}
                   </div>
                   <div className="truncate font-extrabold">{r.userName}</div>
@@ -198,7 +198,7 @@ export default function HomeReviews() {
 
           {!user && (
             <div className="mt-4 rounded-xl border border-[color:var(--stroke)] bg-[color:var(--panel)] p-3 text-sm">
-              Чтобы оставить отзыв — нужно <Link className="underline text-emerald-300" href="/login?next=%2F">войти</Link>.
+              Чтобы оставить отзыв — нужно <Link className="underline text-[color:var(--accent)]" href="/login?next=%2F">войти</Link>.
             </div>
           )}
 
@@ -231,8 +231,8 @@ export default function HomeReviews() {
               <Textarea rows={4} value={text} onChange={(e) => setText(e.target.value)} placeholder="Например: тренер всё объяснил понятно, план помог…" disabled={sending} />
             </div>
 
-            {sendError ? <div className="rounded-xl border border-red-400/40 bg-red-500/10 p-3 text-sm text-red-100">{sendError}</div> : null}
-            {sendOk ? <div className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 p-3 text-sm text-emerald-100">{sendOk}</div> : null}
+            {sendError ? <div className="rounded-xl border border-red-400/40 bg-red-500/10 p-3 text-sm text-[color:var(--text)]">{sendError}</div> : null}
+            {sendOk ? <div className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 p-3 text-sm text-[color:var(--text)]">{sendOk}</div> : null}
 
             <div className="flex justify-end"><Button type="submit" disabled={sending || !user}>{sending ? "Отправка…" : "Отправить"}</Button></div>
           </form>

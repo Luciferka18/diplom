@@ -3,27 +3,31 @@
 @tailwind utilities;
 
 :root {
-  --bg: #f4f7fb;
-  --bg2: #e9eff8;
-  --panel: rgba(255, 255, 255, 0.76);
-  --stroke: rgba(15, 23, 42, 0.12);
+  --bg: #f3f6fb;
+  --bg2: #e8edf5;
+  --panel: #ffffff;
+  --stroke: #d6dee8;
   --text: #0f172a;
-  --muted: #475569;
-  --accent: #10b981;
-  --accent2: #06b6d4;
-  --accentGlow: rgba(16, 185, 129, 0.25);
+  --muted: #5b6b80;
+  --muted2: #7a889a;
+  --accent: #0f9f7a;
+  --accent-hover: #0d8969;
+  --accent2: #0ea5c0;
+  --accentGlow: rgba(15, 159, 122, 0.18);
 }
 
 .dark {
-  --bg: #070d19;
-  --bg2: #040812;
-  --panel: rgba(255, 255, 255, 0.07);
-  --stroke: rgba(255, 255, 255, 0.14);
-  --text: rgba(241, 245, 249, 0.95);
-  --muted: rgba(203, 213, 225, 0.7);
-  --accent: #34d399;
-  --accent2: #22d3ee;
-  --accentGlow: rgba(52, 211, 153, 0.28);
+  --bg: #0b1220;
+  --bg2: #101827;
+  --panel: #151e2e;
+  --stroke: #263246;
+  --text: #e7edf7;
+  --muted: #9aa8bc;
+  --muted2: #7f8da3;
+  --accent: #22b78f;
+  --accent-hover: #1da27f;
+  --accent2: #22b8cf;
+  --accentGlow: rgba(34, 183, 143, 0.24);
 }
 
 html,
@@ -35,10 +39,6 @@ body {
 
 body {
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
-  background:
-    radial-gradient(900px 420px at 15% -6%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 62%),
-    radial-gradient(780px 390px at 90% 2%, color-mix(in srgb, var(--accent2) 18%, transparent), transparent 58%),
-    radial-gradient(720px 360px at 50% 100%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 62%),
-    linear-gradient(180deg, var(--bg2) 0%, var(--bg) 52%, var(--bg2) 100%);
+  background: linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%);
   color: var(--text);
 }
