@@ -1,9 +1,10 @@
-// src/components/Navbar.jsx
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import Container from "@/components/ui/Container";
+import { cn } from "@/lib/cn";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -21,40 +22,33 @@ export default function Navbar() {
     []
   );
 
-  // закрывать меню при смене маршрута
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
+  useEffect(() => setOpen(false), [pathname]);
 
-  // закрывать по ESC
   useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === "Escape") setOpen(false);
-    };
+    const onKey = (e) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const isActive = (href) => {
-    if (href === "/") return pathname === "/";
-    return pathname === href || pathname.startsWith(href + "/");
-  };
+  const isActive = (href) => pathname === href || pathname?.startsWith(`${href}/`);
 
   return (
     <>
-      <header className="nav2">
-        <div className="nav2__inner">
-          <Link href="/" className="nav2__brand" aria-label="FitLab home">
-            <span className="nav2__brandMark" aria-hidden="true">⚡</span>
-            <span className="nav2__brandText">FitLab</span>
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0b1020]/70 backdrop-blur-xl">
+        <Container className="h-16 flex items-center justify-between gap-4">
+          <Link href="/" className="font-extrabold tracking-tight text-white text-lg">
+            Fit<span className="text-emerald-400">Lab</span>
           </Link>
 
-          <nav className="nav2__menu" aria-label="Primary navigation">
+          <nav className="hidden md:flex items-center gap-1 rounded-2xl border border-white/10 bg-white/5 p-1.5" aria-label="Primary navigation">
             {items.map((it) => (
               <Link
                 key={it.href}
                 href={it.href}
-                className={`nav2__link ${isActive(it.href) ? "nav2__link--active" : ""}`}
+                className={cn(
+                  "rounded-xl px-3 py-2 text-sm text-white/80 transition hover:bg-white/10 hover:text-white",
+                  isActive(it.href) && "bg-white/15 text-white"
+                )}
               >
                 {it.label}
               </Link>
@@ -63,42 +57,36 @@ export default function Navbar() {
 
           <button
             type="button"
-            className={`nav2__burger ${open ? "nav2__burger--open" : ""}`}
+            className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-white"
             aria-label="Open menu"
-            aria-expanded={open ? "true" : "false"}
             onClick={() => setOpen((v) => !v)}
           >
-            <span />
-            <span />
-            <span />
+            ☰
           </button>
-        </div>
+        </Container>
       </header>
 
-      {/* Mobile drawer */}
-      <div className={`nav2__drawer ${open ? "nav2__drawer--open" : ""}`} aria-hidden={open ? "false" : "true"}>
-        <div className="nav2__drawerPanel">
-          <div className="nav2__drawerHead">
-            <div className="nav2__drawerTitle">Меню</div>
-            <button type="button" className="nav2__drawerClose" onClick={() => setOpen(false)} aria-label="Close menu">
+      <div className={cn("fixed inset-0 z-[60] md:hidden", open ? "pointer-events-auto" : "pointer-events-none")}> 
+        <button className={cn("absolute inset-0 bg-black/50 transition", open ? "opacity-100" : "opacity-0")} onClick={() => setOpen(false)} aria-label="Close" />
+        <div className={cn("absolute right-0 top-0 h-full w-[86vw] max-w-sm border-l border-white/10 bg-[#0b1020]/95 p-5 backdrop-blur-xl transition", open ? "translate-x-0" : "translate-x-full")}>
+          <div className="mb-4 flex items-center justify-between">
+            <div className="font-bold text-white">Меню</div>
+            <button className="rounded-lg border border-white/20 p-2 text-white" onClick={() => setOpen(false)}>
               ✕
             </button>
           </div>
-
-          <div className="nav2__drawerList">
+          <div className="grid gap-2">
             {items.map((it) => (
               <Link
                 key={it.href}
                 href={it.href}
-                className={`nav2__drawerLink ${isActive(it.href) ? "nav2__drawerLink--active" : ""}`}
+                className={cn("rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white/85", isActive(it.href) && "bg-white/15 text-white")}
               >
                 {it.label}
               </Link>
             ))}
           </div>
         </div>
-
-        <button className="nav2__backdrop" aria-label="Close" onClick={() => setOpen(false)} />
       </div>
     </>
   );

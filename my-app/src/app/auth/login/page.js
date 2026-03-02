@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import { apiPost } from "@/services/api";
+import Container from "@/components/ui/Container";
+import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
 export default function LoginPage() {
   const [login, setLogin] = useState("");
@@ -14,58 +18,32 @@ export default function LoginPage() {
 
     try {
       const res = await apiPost("/auth/login", { login, password });
-
       if (res?.token) localStorage.setItem("fitlab_token", res.token);
       if (res?.user) localStorage.setItem("fitlab_user", JSON.stringify(res.user));
-
-      // на всякий случай убираем старый ключ, если где-то использовался
       localStorage.removeItem("user");
-
       location.href = "/";
     } catch (e2) {
-      const msg =
-        e2?.data?.message ||
-        (e2?.status === 401 ? "Неверный логин или пароль" : "Ошибка входа");
+      const msg = e2?.data?.message || (e2?.status === 401 ? "Неверный логин или пароль" : "Ошибка входа");
       setError(msg);
     }
   };
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center">
-      <form
-        onSubmit={submit}
-        className="bg-white p-8 rounded-xl shadow-md w-full max-w-md space-y-4"
-      >
-        <h1 className="text-2xl font-bold text-center">Вход</h1>
+    <Container size="narrow" className="py-16 min-h-[70vh] flex items-center">
+      <Card className="w-full p-8" hover={false}>
+        <h1 className="text-3xl font-bold text-center">Вход</h1>
+        {error && <p className="mt-4 text-red-300 text-sm text-center">{error}</p>}
 
-        {error && <p className="text-red-600 text-sm">{error}</p>}
+        <form onSubmit={submit} className="mt-6 space-y-4">
+          <Input placeholder="Логин" value={login} onChange={(e) => setLogin(e.target.value)} />
+          <Input type="password" placeholder="Пароль" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Button className="w-full">Войти</Button>
+        </form>
 
-        <input
-          placeholder="Логин"
-          value={login}
-          onChange={(e) => setLogin(e.target.value)}
-          className="w-full border rounded px-3 py-2"
-        />
-
-        <input
-          type="password"
-          placeholder="Пароль"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full border rounded px-3 py-2"
-        />
-
-        <button className="w-full bg-[#2D6033] text-white py-2 rounded hover:opacity-90">
-          Войти
-        </button>
-
-        <p className="text-sm text-center">
-          Нет аккаунта?{" "}
-          <a href="/auth/register" className="text-[#2D6033] font-semibold hover:underline">
-            Регистрация
-          </a>
+        <p className="mt-4 text-sm text-center text-white/75">
+          Нет аккаунта? <a href="/auth/register" className="text-emerald-300 font-semibold hover:underline">Регистрация</a>
         </p>
-      </form>
-    </div>
+      </Card>
+    </Container>
   );
 }
