@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./legacy-components.css";
 import Navbar from "@/components/Navbar";
 import Providers from "./providers";
 
