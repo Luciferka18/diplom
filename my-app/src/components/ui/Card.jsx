@@ -1,6 +1,6 @@
 import { cn } from "@/lib/cn";
 
-export default function Card({ className, hover = true, as: Tag = "div", children }) {
+export default function Card({ className, hover = true, as: Tag = "div", children, ...props }) {
   return (
     <Tag
       className={cn(
@@ -9,6 +9,7 @@ export default function Card({ className, hover = true, as: Tag = "div", childre
           "transition duration-300 hover:-translate-y-0.5 hover:border-emerald-300/35 hover:shadow-[0_16px_42px_rgba(16,185,129,0.18)]",
         className
       )}
+      {...props}
     >
       {children}
     </Tag>

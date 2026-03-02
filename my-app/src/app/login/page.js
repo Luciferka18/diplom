@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Container from "@/components/ui/Container";
 import Card from "@/components/ui/Card";
@@ -10,15 +10,19 @@ import { Input } from "@/components/ui/Input";
 
 export default function LoginPage() {
   const router = useRouter();
-  const params = useSearchParams();
-  const nextUrl = params.get("next") || "/account";
-
   const { login, user } = useAuth();
 
+  const [nextUrl, setNextUrl] = useState("/account");
   const [loginValue, setLoginValue] = useState("");
   const [passwordValue, setPasswordValue] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const fromQuery = new URLSearchParams(window.location.search).get("next");
+    if (fromQuery) setNextUrl(fromQuery);
+  }, []);
 
   useEffect(() => {
     if (user) router.replace(nextUrl);
