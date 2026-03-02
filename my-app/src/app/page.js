@@ -10,7 +10,7 @@ export default function HomePage() {
         Выбирай тренера, проходи программы тренировок, покупай спортивные товары и веди прогресс.
       </p>
 
-      <div className="grid" style={{ marginTop: 18 }}>
+      <div className="home-grid" style={{ marginTop: 18 }}>
         <Link href="/trainers" className="card col-4">
           <div className="card-title">Тренеры</div>
           <p className="card-text">Подбор специалиста под цель: похудение, набор массы, функционал.</p>

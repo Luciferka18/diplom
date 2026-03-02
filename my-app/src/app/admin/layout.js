@@ -4,7 +4,7 @@ import Link from "next/link";
 export default function AdminLayout({ children }) {
   return (
     <RequireAdmin>
-      <div className="container">
+      <div className="app-container">
         <div className="lkHead">
           <h1 className="lkTitle">Админка</h1>
           <div className="lkNav">
