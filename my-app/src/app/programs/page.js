@@ -49,8 +49,8 @@ export default function ProgramsPage() {
           {programs.map((p) => (
             <Card key={p.id} as={Link} href={`/programs/${p.id}`} className="group h-full">
               <h3 className="text-lg font-semibold">{p.title || p.name}</h3>
-              <p className="mt-2 text-sm text-white/70 line-clamp-3">{p.description || "Описание скоро появится"}</p>
-              <div className="mt-5"><Button variant="ghost" className="group-hover:text-white">Открыть программу →</Button></div>
+              <p className="mt-2 text-sm text-[color:var(--muted)] line-clamp-3">{p.description || "Описание скоро появится"}</p>
+              <div className="mt-5"><Button variant="ghost" className="group-hover:text-[color:var(--text)]">Открыть программу →</Button></div>
             </Card>
           ))}
         </div>

@@ -43,7 +43,7 @@ export default function RegisterPage() {
           <Button className="w-full">Создать аккаунт</Button>
         </form>
 
-        <p className="mt-4 text-sm text-center text-white/75">
+        <p className="mt-4 text-sm text-center text-[color:var(--muted)]">
           Уже есть аккаунт? <a href="/auth/login" className="text-emerald-300 font-semibold hover:underline">Войти</a>
         </p>
       </Card>

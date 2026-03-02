@@ -40,7 +40,7 @@ export default function LoginPage() {
           <Button className="w-full">Войти</Button>
         </form>
 
-        <p className="mt-4 text-sm text-center text-white/75">
+        <p className="mt-4 text-sm text-center text-[color:var(--muted)]">
           Нет аккаунта? <a href="/auth/register" className="text-emerald-300 font-semibold hover:underline">Регистрация</a>
         </p>
       </Card>

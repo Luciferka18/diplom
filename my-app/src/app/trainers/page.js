@@ -31,16 +31,16 @@ export default async function TrainersPage() {
                     <img
                       src={t.photo_url || t.avatar || t.image}
                       alt={t.name}
-                      className="h-16 w-16 rounded-xl object-cover border border-white/15"
+                      className="h-16 w-16 rounded-xl object-cover border border-[color:var(--stroke)]"
                     />
                   ) : (
-                    <div className="h-16 w-16 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-xl">
+                    <div className="h-16 w-16 rounded-xl bg-[color:var(--panel)] border border-[color:var(--stroke)] flex items-center justify-center text-xl">
                       🧑‍🏫
                     </div>
                   )}
                   <div>
                     <div className="font-semibold text-lg">{t.name}</div>
-                    <div className="text-sm text-white/65 mt-1">{t.specialization || "Персональный тренер"}</div>
+                    <div className="text-sm text-[color:var(--muted)] mt-1">{t.specialization || "Персональный тренер"}</div>
                   </div>
                 </div>
 

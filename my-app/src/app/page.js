@@ -42,7 +42,7 @@ export default function HomePage() {
           <h1 className="text-5xl md:text-6xl font-black leading-tight bg-gradient-to-r from-emerald-300 via-cyan-200 to-emerald-400 bg-clip-text text-transparent">
             Единая fitness-платформа для тренировок, питания и прогресса
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-base md:text-lg text-white/75">
+          <p className="mx-auto mt-5 max-w-2xl text-base md:text-lg text-[color:var(--muted)]">
             Выбирай тренера, проходи программы, покупай товары и двигайся к цели в одном цифровом пространстве.
           </p>
 
@@ -55,8 +55,8 @@ export default function HomePage() {
             {stats.map((s) => (
               <Card key={s.label} className="p-4 md:p-5 text-left" hover={false}>
                 <div className="text-xl">{s.icon}</div>
-                <div className="mt-2 text-2xl font-bold text-white">{s.value}</div>
-                <div className="text-sm text-white/65">{s.label}</div>
+                <div className="mt-2 text-2xl font-bold text-[color:var(--text)]">{s.value}</div>
+                <div className="text-sm text-[color:var(--muted)]">{s.label}</div>
               </Card>
             ))}
           </div>
@@ -69,7 +69,7 @@ export default function HomePage() {
             <Card key={step.title} className="p-6">
               <div className="text-2xl">{step.icon}</div>
               <h3 className="mt-3 text-xl font-semibold">{step.title}</h3>
-              <p className="mt-2 text-white/70">{step.text}</p>
+              <p className="mt-2 text-[color:var(--muted)]">{step.text}</p>
             </Card>
           ))}
         </div>
@@ -81,7 +81,7 @@ export default function HomePage() {
             <Card key={b.title} className="h-full">
               <div className="text-2xl">{b.icon}</div>
               <h3 className="mt-3 text-lg font-semibold">{b.title}</h3>
-              <p className="mt-2 text-sm text-white/70">{b.text}</p>
+              <p className="mt-2 text-sm text-[color:var(--muted)]">{b.text}</p>
             </Card>
           ))}
         </div>
@@ -100,8 +100,8 @@ export default function HomePage() {
               <div className="flex h-full flex-col relative">
                 <div className="mb-3 text-2xl" aria-hidden="true">{item.icon}</div>
                 <div className="text-xl font-bold">{item.title}</div>
-                <p className="mt-2 flex-1 text-white/70">{item.text}</p>
-                <div className="mt-5 inline-flex items-center gap-2 font-semibold text-emerald-200 group-hover:text-white transition">
+                <p className="mt-2 flex-1 text-[color:var(--muted)]">{item.text}</p>
+                <div className="mt-5 inline-flex items-center gap-2 font-semibold text-emerald-200 group-hover:text-[color:var(--text)] transition">
                   {item.cta} <span className="transition-transform group-hover:translate-x-1">→</span>
                 </div>
               </div>

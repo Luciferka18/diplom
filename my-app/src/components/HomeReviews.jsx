@@ -158,7 +158,7 @@ export default function HomeReviews() {
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold">Отзывы</h2>
-          <p className="mt-2 text-white/70">Реальные впечатления пользователей</p>
+          <p className="mt-2 text-[color:var(--muted)]">Реальные впечатления пользователей</p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
@@ -176,17 +176,17 @@ export default function HomeReviews() {
           <Card>Пока нет отзывов</Card>
         ) : (
           reviews.map((r) => (
-            <Card key={r.id} className="group bg-white/10 border-white/15">
+            <Card key={r.id} className="group bg-[color:var(--panel)] border-[color:var(--stroke)]">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="h-10 w-10 shrink-0 rounded-full bg-gradient-to-br from-emerald-400/80 to-green-600/80 text-sm font-bold text-white flex items-center justify-center">
+                  <div className="h-10 w-10 shrink-0 rounded-full bg-gradient-to-br from-emerald-400/80 to-green-600/80 text-sm font-bold text-[color:var(--text)] flex items-center justify-center">
                     {(r.userName || "П").trim().charAt(0).toUpperCase()}
                   </div>
                   <div className="truncate font-extrabold">{r.userName}</div>
                 </div>
                 <Stars value={r.rating} />
               </div>
-              <div className="mt-3 text-white/80 leading-relaxed">{r.text}</div>
+              <div className="mt-3 text-[color:var(--text)] leading-relaxed">{r.text}</div>
             </Card>
           ))
         )}
@@ -197,15 +197,15 @@ export default function HomeReviews() {
           <div className="text-lg font-bold">Оставить отзыв</div>
 
           {!user && (
-            <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3 text-sm">
+            <div className="mt-4 rounded-xl border border-[color:var(--stroke)] bg-[color:var(--panel)] p-3 text-sm">
               Чтобы оставить отзыв — нужно <Link className="underline text-emerald-300" href="/login?next=%2F">войти</Link>.
             </div>
           )}
 
           <form onSubmit={submit} className="mt-4 grid gap-4">
             <div className="grid gap-2">
-              <label className="text-sm text-white/80">Кому/чему отзыв</label>
-              <select className="w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2.5" value={type} onChange={(e) => setType(e.target.value)} disabled={sending}>
+              <label className="text-sm text-[color:var(--text)]">Кому/чему отзыв</label>
+              <select className="w-full rounded-xl border border-[color:var(--stroke)] bg-[color:var(--panel)] px-3 py-2.5" value={type} onChange={(e) => setType(e.target.value)} disabled={sending}>
                 <option value="trainer">Тренер</option>
                 <option value="program">Программа</option>
                 <option value="product">Товар</option>
@@ -213,21 +213,21 @@ export default function HomeReviews() {
             </div>
 
             <div className="grid gap-2">
-              <label className="text-sm text-white/80">Выбор</label>
-              <select className="w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2.5" value={itemId} onChange={(e) => setItemId(e.target.value)} disabled={sending || itemsLoading}>
+              <label className="text-sm text-[color:var(--text)]">Выбор</label>
+              <select className="w-full rounded-xl border border-[color:var(--stroke)] bg-[color:var(--panel)] px-3 py-2.5" value={itemId} onChange={(e) => setItemId(e.target.value)} disabled={sending || itemsLoading}>
                 {itemsLoading ? <option value="">Загрузка…</option> : items.length === 0 ? <option value="">Нет данных</option> : items.map((it) => <option key={it.id} value={String(it.id)}>{it.label}</option>)}
               </select>
             </div>
 
             <div className="grid gap-2">
-              <label className="text-sm text-white/80">Оценка</label>
-              <select className="w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2.5" value={rating} onChange={(e) => setRating(Number(e.target.value))} disabled={sending}>
+              <label className="text-sm text-[color:var(--text)]">Оценка</label>
+              <select className="w-full rounded-xl border border-[color:var(--stroke)] bg-[color:var(--panel)] px-3 py-2.5" value={rating} onChange={(e) => setRating(Number(e.target.value))} disabled={sending}>
                 {[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
             </div>
 
             <div className="grid gap-2">
-              <label className="text-sm text-white/80">Текст</label>
+              <label className="text-sm text-[color:var(--text)]">Текст</label>
               <Textarea rows={4} value={text} onChange={(e) => setText(e.target.value)} placeholder="Например: тренер всё объяснил понятно, план помог…" disabled={sending} />
             </div>
 

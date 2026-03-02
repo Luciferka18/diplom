@@ -49,8 +49,8 @@ export default function Navbar() {
                 key={it.href}
                 href={it.href}
                 className={cn(
-                  "rounded-xl px-3 py-2 text-sm text-[color:var(--muted)] transition hover:bg-white/10 hover:text-[color:var(--text)]",
-                  isActive(it.href) && "bg-white/15 text-[color:var(--text)]"
+                  "rounded-xl px-3 py-2 text-sm text-[color:var(--muted)] transition hover:bg-[color:var(--panel)] hover:text-[color:var(--text)]",
+                  isActive(it.href) && "bg-[color:var(--panel)] text-[color:var(--text)]"
                 )}
               >
                 {it.label}
@@ -98,7 +98,7 @@ export default function Navbar() {
                 href={it.href}
                 className={cn(
                   "rounded-xl border border-[color:var(--stroke)] bg-[color:var(--panel)] px-4 py-3 text-[color:var(--muted)]",
-                  isActive(it.href) && "bg-white/15 text-[color:var(--text)]"
+                  isActive(it.href) && "bg-[color:var(--panel)] text-[color:var(--text)]"
                 )}
               >
                 {it.label}

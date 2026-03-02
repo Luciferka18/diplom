@@ -11,7 +11,7 @@ export default function ProductCard({ product }) {
       <div className="flex h-full flex-col">
         <h3 className="font-semibold text-lg">{product.name}</h3>
 
-        {product.description && <p className="text-sm text-white/70 mt-2 line-clamp-3">{product.description}</p>}
+        {product.description && <p className="text-sm text-[color:var(--muted)] mt-2 line-clamp-3">{product.description}</p>}
 
         <div className="mt-4 flex items-center justify-between">
           <Badge className="text-emerald-200">{product.price} ₽</Badge>
