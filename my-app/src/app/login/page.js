@@ -1,20 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import Container from "@/components/ui/Container";
+import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
 export default function LoginPage() {
   const router = useRouter();
-  const params = useSearchParams();
-  const nextUrl = params.get("next") || "/account";
-
   const { login, user } = useAuth();
 
+  const [nextUrl, setNextUrl] = useState("/account");
   const [loginValue, setLoginValue] = useState("");
   const [passwordValue, setPasswordValue] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const fromQuery = new URLSearchParams(window.location.search).get("next");
+    if (fromQuery) setNextUrl(fromQuery);
+  }, []);
 
   useEffect(() => {
     if (user) router.replace(nextUrl);
@@ -33,7 +41,6 @@ export default function LoginPage() {
       if (!p) throw new Error("Введите пароль");
 
       await login(l, p);
-
       router.replace(nextUrl);
     } catch (err) {
       setError(err?.message || "Ошибка входа");
@@ -43,37 +50,17 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="app-container" style={{ paddingTop: 60, paddingBottom: 60 }}>
-      <div className="card" style={{ maxWidth: 520, margin: "0 auto" }}>
-        <div className="h2">Вход</div>
+    <Container size="narrow" className="py-16 min-h-[70vh] flex items-center">
+      <Card className="w-full p-8" hover={false}>
+        <h1 className="text-3xl font-bold text-center">Вход</h1>
 
-        <form onSubmit={onSubmit} style={{ display: "grid", gap: 10, marginTop: 14 }}>
-          <input
-            className="input"
-            placeholder="Логин или email"
-            autoComplete="username"
-            value={loginValue}
-            onChange={(e) => setLoginValue(e.target.value)}
-            disabled={busy}
-          />
-
-          <input
-            className="input"
-            placeholder="Пароль"
-            type="password"
-            autoComplete="current-password"
-            value={passwordValue}
-            onChange={(e) => setPasswordValue(e.target.value)}
-            disabled={busy}
-          />
-
-          {error ? <div className="error">{error}</div> : null}
-
-          <button className="btn btn-primary" type="submit" disabled={busy}>
-            {busy ? "Входим..." : "Войти"}
-          </button>
+        <form onSubmit={onSubmit} className="grid gap-4 mt-6">
+          <Input placeholder="Логин или email" autoComplete="username" value={loginValue} onChange={(e) => setLoginValue(e.target.value)} disabled={busy} />
+          <Input type="password" placeholder="Пароль" autoComplete="current-password" value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} disabled={busy} />
+          {error ? <div className="rounded-xl border border-red-400/40 bg-red-500/10 p-3 text-sm text-red-200">{error}</div> : null}
+          <Button type="submit" disabled={busy}>{busy ? "Входим..." : "Войти"}</Button>
         </form>
-      </div>
-    </div>
+      </Card>
+    </Container>
   );
 }

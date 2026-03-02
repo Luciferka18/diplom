@@ -1,30 +1,32 @@
-// src/app/account/page.js
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
+import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
+import Badge from "@/components/ui/Badge";
 
 export default function AccountPage() {
   const { user, role, isAdmin, logout } = useAuth();
 
   return (
-    <div className="card">
-      <div className="row">
+    <Card hover={false} className="p-6 md:p-8">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="muted">Данные аккаунта</div>
-          <div className="h2">{user?.name || "Пользователь"}</div>
-          <div className="muted">{user?.email || ""}</div>
-          <div className="muted">Роль: {String(role || "user")}</div>
-          {isAdmin ? <div className="pill">Admin</div> : null}
+          <div className="text-[color:var(--muted)] text-sm">Данные аккаунта</div>
+          <div className="text-2xl font-bold mt-1">{user?.name || "Пользователь"}</div>
+          <div className="text-[color:var(--muted)] mt-1">{user?.email || ""}</div>
+          <div className="text-[color:var(--muted)] mt-1">Роль: {String(role || "user")}</div>
+          {isAdmin ? <Badge className="mt-3">Admin</Badge> : null}
         </div>
 
-        <button className="btn" onClick={logout}>Выйти</button>
+        <Button variant="outline" onClick={logout}>Выйти</Button>
       </div>
 
       {isAdmin ? (
-        <div style={{ marginTop: 12 }}>
-          <a className="btn btnOutline" href="/admin">Перейти в админку</a>
+        <div className="mt-6">
+          <Button as="a" href="/admin" variant="primary">Перейти в админку</Button>
         </div>
       ) : null}
-    </div>
+    </Card>
   );
 }
