@@ -211,21 +211,29 @@ export default function HomeReviews() {
         </div>
       </div>
 
-      <div className="reviews-grid">
+      <div className="reviews-grid gap-6 md:gap-7">
         {loading ? (
-          <div className="card reviews-empty">Загрузка отзывов…</div>
+          <div className="card reviews-empty border border-white/10 bg-white/5">Загрузка отзывов…</div>
         ) : loadError ? (
-          <div className="card reviews-empty">Ошибка: {loadError}</div>
+          <div className="card reviews-empty border border-white/10 bg-white/5">Ошибка: {loadError}</div>
         ) : reviews.length === 0 ? (
-          <div className="card reviews-empty">Пока нет отзывов</div>
+          <div className="card reviews-empty border border-white/10 bg-white/5">Пока нет отзывов</div>
         ) : (
           reviews.map((r) => (
-            <div className="review-card" key={r.id}>
+            <div
+              className="review-card group rounded-2xl border border-white/15 bg-white/10 backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:border-emerald-300/25 hover:shadow-xl hover:shadow-black/30"
+              key={r.id}
+            >
               <div className="review-top">
-                <div className="review-name">{r.userName}</div>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-10 w-10 shrink-0 rounded-full bg-gradient-to-br from-emerald-400/80 to-green-600/80 text-sm font-bold text-white flex items-center justify-center">
+                    {(r.userName || "П").trim().charAt(0).toUpperCase()}
+                  </div>
+                  <div className="review-name font-extrabold">{r.userName}</div>
+                </div>
                 <Stars value={r.rating} />
               </div>
-              <div className="review-text">{r.text}</div>
+              <div className="review-text opacity-90">{r.text}</div>
             </div>
           ))
         )}
