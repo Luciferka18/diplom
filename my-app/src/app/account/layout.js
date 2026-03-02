@@ -18,7 +18,7 @@ export default function AccountLayout({ children }) {
 
   if (loading) {
     return (
-      <div className="container" style={{ padding: 40 }}>
+      <div className="app-container" style={{ padding: 40 }}>
         <div className="card">Загрузка...</div>
       </div>
     );
@@ -27,7 +27,7 @@ export default function AccountLayout({ children }) {
   if (!user) {
     // пока редиректится
     return (
-      <div className="container" style={{ padding: 40 }}>
+      <div className="app-container" style={{ padding: 40 }}>
         <div className="card">Перенаправление на вход...</div>
       </div>
     );
