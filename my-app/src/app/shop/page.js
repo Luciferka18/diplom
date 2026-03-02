@@ -1,5 +1,7 @@
 import { apiGet } from "@/services/api";
 import ProductCard from "@/components/ProductCard";
+import Section from "@/components/ui/Section";
+import Card from "@/components/ui/Card";
 
 export default async function ShopPage() {
   let products = [];
@@ -12,14 +14,13 @@ export default async function ShopPage() {
   }
 
   return (
-    <main className="container-fitlab py-10">
-      <h1 className="section-title mb-6">Магазин</h1>
-      {backendMissing && <p>Not implemented on backend</p>}
-      <div className="grid gap-4 md:grid-cols-3 text-sm">
-        {products.map(p => (
+    <Section title="Магазин" subtitle="Питание, аксессуары и инвентарь для прогресса.">
+      {backendMissing ? <Card>Not implemented on backend</Card> : null}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 text-sm">
+        {products.map((p) => (
           <ProductCard key={p.id} product={p} />
         ))}
       </div>
-    </main>
+    </Section>
   );
 }

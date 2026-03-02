@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import Container from "@/components/ui/Container";
+import Card from "@/components/ui/Card";
 
 export default function AccountLayout({ children }) {
   const router = useRouter();
@@ -10,28 +12,25 @@ export default function AccountLayout({ children }) {
   const { user, loading } = useAuth();
 
   useEffect(() => {
-    if (loading) return; // ждём гидрацию/загрузку user из localStorage
-    if (!user) {
-      router.replace(`/login?next=${encodeURIComponent(pathname || "/account")}`);
-    }
+    if (loading) return;
+    if (!user) router.replace(`/login?next=${encodeURIComponent(pathname || "/account")}`);
   }, [loading, user, router, pathname]);
 
   if (loading) {
     return (
-      <div className="app-container" style={{ padding: 40 }}>
-        <div className="card">Загрузка...</div>
-      </div>
+      <Container className="py-10">
+        <Card hover={false}>Загрузка...</Card>
+      </Container>
     );
   }
 
   if (!user) {
-    // пока редиректится
     return (
-      <div className="app-container" style={{ padding: 40 }}>
-        <div className="card">Перенаправление на вход...</div>
-      </div>
+      <Container className="py-10">
+        <Card hover={false}>Перенаправление на вход...</Card>
+      </Container>
     );
   }
 
-  return children;
+  return <Container className="py-10">{children}</Container>;
 }
