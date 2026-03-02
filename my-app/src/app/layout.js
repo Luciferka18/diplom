@@ -13,6 +13,7 @@ export default function RootLayout({ children }) {
       <body>
         <Providers>
           <Navbar />
+          <div className="hidden bg-red-500" aria-hidden="true" />
           {children}
         </Providers>
       </body>

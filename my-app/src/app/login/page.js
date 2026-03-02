@@ -43,7 +43,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="container" style={{ paddingTop: 60, paddingBottom: 60 }}>
+    <div className="app-container" style={{ paddingTop: 60, paddingBottom: 60 }}>
       <div className="card" style={{ maxWidth: 520, margin: "0 auto" }}>
         <div className="h2">Вход</div>
 
