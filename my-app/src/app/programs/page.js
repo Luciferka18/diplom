@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiGet } from "@/services/api";
+import Section from "@/components/ui/Section";
+import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
 
 export default function ProgramsPage() {
   const [programs, setPrograms] = useState([]);
@@ -34,29 +37,24 @@ export default function ProgramsPage() {
   }, []);
 
   return (
-    <main className="container-fitlab py-10">
-      <h1 className="text-3xl font-bold">Программы тренировок</h1>
-
+    <Section title="Программы тренировок" subtitle="Выбирай программу по цели, уровню и длительности.">
       {loading ? (
-        <p className="mt-6">Загрузка...</p>
+        <Card>Загрузка...</Card>
       ) : err ? (
-        <p className="mt-6" style={{ color: "#ffb4b4" }}>
-          {err}
-        </p>
+        <Card className="text-red-200">{err}</Card>
       ) : programs.length === 0 ? (
-        <p className="mt-6">Программы не найдены</p>
+        <Card>Программы не найдены</Card>
       ) : (
-        <div className="grid gap-4 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {programs.map((p) => (
-            <Link key={p.id} href={`/programs/${p.id}`}>
-              <div className="card">
-                <h3>{p.title}</h3>
-                <p>{p.description}</p>
-              </div>
-            </Link>
+            <Card key={p.id} as={Link} href={`/programs/${p.id}`} className="group h-full">
+              <h3 className="text-lg font-semibold">{p.title || p.name}</h3>
+              <p className="mt-2 text-sm text-[color:var(--muted)] line-clamp-3">{p.description || "Описание скоро появится"}</p>
+              <div className="mt-5"><Button variant="ghost" className="group-hover:text-[color:var(--text)]">Открыть программу →</Button></div>
+            </Card>
           ))}
         </div>
       )}
-    </main>
+    </Section>
   );
 }
