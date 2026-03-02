@@ -31,26 +31,35 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const login = async (loginValue, password) => {
-    const data = await apiPost("/auth/login", { login: loginValue, password });
-    setUser(data.user || null);
-    if (data.user) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data.user));
-    }
-    if (data.token) {
-      localStorage.setItem(TOKEN_KEY, data.token);
-    }
+  const login = async (loginOrEmail, password) => {
+    // Шлём и login, и email — Laravel примет то, что валидирует
+    const payload = {
+      login: loginOrEmail,
+      email: loginOrEmail,
+      password,
+    };
+
+    const data = await apiPost("/auth/login", payload);
+
+    // Поддержка разных форматов ответа
+    const u = data?.user ?? data?.data?.user ?? null;
+    const t = data?.token ?? data?.data?.token ?? null;
+
+    setUser(u);
+    if (u) localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
+    if (t) localStorage.setItem(TOKEN_KEY, t);
   };
 
+  
   const register = async (payload) => {
     const data = await apiPost("/auth/register", payload);
-    setUser(data.user || null);
-    if (data.user) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data.user));
-    }
-    if (data.token) {
-      localStorage.setItem(TOKEN_KEY, data.token);
-    }
+
+    const u = data?.user ?? data?.data?.user ?? null;
+    const t = data?.token ?? data?.data?.token ?? null;
+
+    setUser(u);
+    if (u) localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
+    if (t) localStorage.setItem(TOKEN_KEY, t);
   };
 
   const logout = async () => {

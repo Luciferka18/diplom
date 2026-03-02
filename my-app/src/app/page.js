@@ -1,73 +1,48 @@
-'use client';
-
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
-
-const routes = [
-  '/programs',
-  '/trainers',
-  '/shop',
-  '/blog',
-  '/contacts',
-  '/cart',
-  '/dashboard',
-  '/auth/login',
-  '/auth/register',
-];
+import Link from "next/link";
+import HomeReviews from "@/components/HomeReviews";
 
 export default function HomePage() {
-  const [status, setStatus] = useState({ state: 'loading', message: 'Checking backend...' });
-
-  useEffect(() => {
-    let active = true;
-
-    fetch('/api/health', { cache: 'no-store' })
-      .then(async (response) => {
-        const payload = await response.json().catch(() => ({}));
-        if (!active) return;
-
-        if (response.ok && payload?.ok) {
-          setStatus({ state: 'ok', message: payload.message || 'Backend is reachable' });
-          return;
-        }
-
-        setStatus({
-          state: 'error',
-          message: payload?.error || payload?.message || `Health check failed (${response.status})`,
-        });
-      })
-      .catch((error) => {
-        if (!active) return;
-        setStatus({ state: 'error', message: error.message || 'Network error' });
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
   return (
-    <main className="page">
-      <section className="card" style={{ marginBottom: 16 }}>
-        <h1>FitLab Home (Smoke Test)</h1>
-        <p>Быстрые ссылки для проверки UI и роутинга.</p>
-        <ul>
-          {routes.map((route) => (
-            <li key={route}>
-              <Link href={route}>{route}</Link>
-            </li>
-          ))}
-        </ul>
-      </section>
+    <div>
+      <p className="kicker">Платформа тренировок • программы • магазин</p>
+      <h1 className="page-title">Добро пожаловать в FitLab</h1>
+      <p className="page-subtitle">
+        Выбирай тренера, проходи программы тренировок, покупай спортивные товары и веди прогресс.
+      </p>
 
-      <section className="card">
-        <h2>Backend status</h2>
-        <p>
-          {status.state === 'loading' && 'Checking...'}
-          {status.state === 'ok' && `OK: ${status.message}`}
-          {status.state === 'error' && `ERROR: ${status.message}`}
-        </p>
-      </section>
-    </main>
+      <div className="grid" style={{ marginTop: 18 }}>
+        <Link href="/trainers" className="card col-4">
+          <div className="card-title">Тренеры</div>
+          <p className="card-text">Подбор специалиста под цель: похудение, набор массы, функционал.</p>
+          <div className="card-cta">Перейти →</div>
+        </Link>
+
+        <Link href="/programs" className="card col-4">
+          <div className="card-title">Программы</div>
+          <p className="card-text">Готовые планы занятий. Уровень, длительность и результат.</p>
+          <div className="card-cta">Перейти →</div>
+        </Link>
+
+        <Link href="/shop" className="card col-4">
+          <div className="card-title">Магазин</div>
+          <p className="card-text">Добавки, питание, инвентарь. Всё в одной корзине.</p>
+          <div className="card-cta">Перейти →</div>
+        </Link>
+
+        <Link href="/articles" className="card col-6">
+          <div className="card-title">Статьи и гайды</div>
+          <p className="card-text">Питание, восстановление, техника и полезные советы.</p>
+          <div className="card-cta">Читать →</div>
+        </Link>
+
+        <Link href="/booking" className="card col-6">
+          <div className="card-title">Запись на тренировку</div>
+          <p className="card-text">Бронирование занятий и управление расписанием.</p>
+          <div className="card-cta">Записаться →</div>
+        </Link>
+      </div>
+
+      <HomeReviews />
+    </div>
   );
 }

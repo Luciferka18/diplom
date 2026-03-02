@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { api } from "@/services/api";
+import { apiPost } from "@/services/api";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -13,42 +13,93 @@ export default function RegisterPage() {
     email: "",
   });
 
-  const handleChange = e => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const [error, setError] = useState("");
 
-  const submit = async e => {
+  const submit = async (e) => {
     e.preventDefault();
-    console.log("[register] submit fired", { login: form.login, email: form.email });
+    setError("");
 
     try {
-      const { data } = await api.post("/auth/register", form);
-      console.log("[register] success", data);
+      const res = await apiPost("/auth/register", form);
 
-      if (data?.token) localStorage.setItem("fitlab_token", data.token);
-      if (data?.user) localStorage.setItem("fitlab_user", JSON.stringify(data.user));
-      alert("Регистрация успешна");
-    } catch (error) {
-      console.error("[register] failed", error);
-      alert("Ошибка регистрации");
+      if (res?.token) localStorage.setItem("fitlab_token", res.token);
+      if (res?.user) localStorage.setItem("fitlab_user", JSON.stringify(res.user));
+      localStorage.removeItem("user");
+
+      location.href = "/";
+    } catch (e2) {
+      const msg =
+        e2?.data?.message ||
+        (e2?.data?.errors ? "Проверь поля формы" : "Ошибка регистрации");
+      setError(msg);
     }
   };
 
   return (
-    <form onSubmit={submit}>
-      <h1>Регистрация</h1>
-      <input name="login" placeholder="Логин" onChange={handleChange} />
-      <input name="name" placeholder="Имя (кириллица)" onChange={handleChange} />
-      <input name="phone" placeholder="+79991234567" onChange={handleChange} />
-      <input name="email" placeholder="Email" onChange={handleChange} />
-      <input type="password" name="password" placeholder="Пароль" onChange={handleChange} />
-      <input
-        type="password"
-        name="password_confirmation"
-        placeholder="Повтор пароля"
-        onChange={handleChange}
-      />
-      <button type="submit">Зарегистрироваться</button>
-    </form>
+    <div className="min-h-[70vh] flex items-center justify-center">
+      <form
+        onSubmit={submit}
+        className="bg-white p-8 rounded-xl shadow-md w-full max-w-md space-y-4"
+      >
+        <h1 className="text-2xl font-bold text-center">Регистрация</h1>
+
+        {error && <p className="text-red-600 text-sm">{error}</p>}
+
+        <input
+          placeholder="Логин"
+          value={form.login}
+          onChange={(e) => setForm({ ...form, login: e.target.value })}
+          className="w-full border rounded px-3 py-2"
+        />
+
+        <input
+          placeholder="Имя (кириллица)"
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          className="w-full border rounded px-3 py-2"
+        />
+
+        <input
+          placeholder="+79991234567"
+          value={form.phone}
+          onChange={(e) => setForm({ ...form, phone: e.target.value })}
+          className="w-full border rounded px-3 py-2"
+        />
+
+        <input
+          placeholder="Email"
+          value={form.email}
+          onChange={(e) => setForm({ ...form, email: e.target.value })}
+          className="w-full border rounded px-3 py-2"
+        />
+
+        <input
+          type="password"
+          placeholder="Пароль (мин. 8)"
+          value={form.password}
+          onChange={(e) => setForm({ ...form, password: e.target.value })}
+          className="w-full border rounded px-3 py-2"
+        />
+
+        <input
+          type="password"
+          placeholder="Повтор пароля"
+          value={form.password_confirmation}
+          onChange={(e) => setForm({ ...form, password_confirmation: e.target.value })}
+          className="w-full border rounded px-3 py-2"
+        />
+
+        <button className="w-full bg-[#2D6033] text-white py-2 rounded hover:opacity-90">
+          Создать аккаунт
+        </button>
+
+        <p className="text-sm text-center">
+          Уже есть аккаунт?{" "}
+          <a href="/auth/login" className="text-[#2D6033] font-semibold hover:underline">
+            Войти
+          </a>
+        </p>
+      </form>
+    </div>
   );
 }

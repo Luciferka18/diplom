@@ -1,11 +1,16 @@
 "use client";
+
 import { useCart } from "@/context/CartContext";
 
-export function AddToCartButton({ product }) {
+export default function AddToCartButton({ product, className = "" }) {
   const { addToCart } = useCart();
 
   return (
-    <button className="btn-primary" onClick={() => addToCart(product)}>
+    <button
+      type="button"
+      onClick={() => addToCart(product)}
+      className={`btn btn-primary ${className}`}
+    >
       В корзину
     </button>
   );

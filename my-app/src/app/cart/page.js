@@ -1,70 +1,76 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
 import { useCart } from "@/context/CartContext";
-import { api } from "@/services/api";
 
 export default function CartPage() {
-  const cartState = (typeof useCart === "function" ? useCart() : null) || {};
-  const { cart = [], removeFromCart, clearCart, total = 0 } = cartState;
-  const [customer, setCustomer] = useState({ customer_name: "", customer_phone: "", customer_email: "" });
+  const { cart, removeFromCart, clearCart, setQuantity, totalCount, totalPrice, loadingCart } = useCart();
 
-  const order = async () => {
-    if (!customer.customer_name || !customer.customer_phone) {
-      alert("Укажите имя и телефон для оформления заказа");
-      return;
-    }
+  if (loadingCart) {
+    return (
+      <div>
+        <h1 className="page-title">Корзина</h1>
+        <p className="page-subtitle">Загрузка…</p>
+      </div>
+    );
+  }
 
-    await api.post("/orders", {
-      ...customer,
-      items: cart.map((i) => ({ product_id: i.id, quantity: i.quantity })),
-    });
-    clearCart();
-    alert("Заказ оформлен");
-  };
+  if (!cart || cart.length === 0) {
+    return (
+      <div>
+        <h1 className="page-title">Корзина</h1>
+        <p className="page-subtitle">Корзина пуста.</p>
+        <Link className="btn btn-primary" href="/shop">
+          Перейти в магазин
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div>
-      <h1>Корзина</h1>
+      <h1 className="page-title">Корзина</h1>
+      <p className="page-subtitle">
+        Товаров: <b>{totalCount}</b> • Сумма: <b>{Number(totalPrice).toFixed(2)}</b>
+      </p>
 
-      {cart.length === 0 && <p>Корзина пуста</p>}
+      <div style={{ display: "grid", gap: 12, marginTop: 16 }}>
+        {cart.map((item) => (
+          <div key={item.id} className="card" style={{ display: "flex", gap: 14, alignItems: "center" }}>
+            <div style={{ flex: 1 }}>
+              <div className="card-title" style={{ marginBottom: 6 }}>
+                {item.name}
+              </div>
+              <div className="card-text">Цена: {Number(item.price).toFixed(2)}</div>
 
-      {cart.map((i) => (
-        <div key={i.id} className="card" style={{ marginBottom: 10 }}>
-          <h3>{i.title}</h3>
-          <p>Количество: {i.quantity}</p>
-          <p>Цена: {i.price * i.quantity} ₽</p>
-          <button className="button secondary" onClick={() => removeFromCart(i.id)}>
-            Удалить
-          </button>
-        </div>
-      ))}
+              <div style={{ marginTop: 10, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <span className="muted">Кол-во:</span>
+                <button className="btn" onClick={() => setQuantity(item.id, item.quantity - 1)}>-</button>
+                <input
+                  className="input"
+                  style={{ width: 90 }}
+                  value={item.quantity}
+                  onChange={(e) => setQuantity(item.id, e.target.value)}
+                />
+                <button className="btn" onClick={() => setQuantity(item.id, item.quantity + 1)}>+</button>
+              </div>
+            </div>
 
-      {cart.length > 0 && (
-        <>
-          <h2>Итого: {total} ₽</h2>
-          <div className="card" style={{ marginBottom: 10, display: 'grid', gap: 8, maxWidth: 420 }}>
-            <input
-              placeholder="Ваше имя"
-              value={customer.customer_name}
-              onChange={(e) => setCustomer((prev) => ({ ...prev, customer_name: e.target.value }))}
-            />
-            <input
-              placeholder="Телефон"
-              value={customer.customer_phone}
-              onChange={(e) => setCustomer((prev) => ({ ...prev, customer_phone: e.target.value }))}
-            />
-            <input
-              placeholder="Email (необязательно)"
-              value={customer.customer_email}
-              onChange={(e) => setCustomer((prev) => ({ ...prev, customer_email: e.target.value }))}
-            />
+            <button className="btn" onClick={() => removeFromCart(item.id)}>
+              Удалить
+            </button>
           </div>
-          <button className="button" onClick={order}>
-            Оформить заказ
-          </button>
-        </>
-      )}
+        ))}
+      </div>
+
+      <div style={{ display: "flex", gap: 10, marginTop: 18, flexWrap: "wrap" }}>
+        <button className="btn" onClick={clearCart}>
+          Очистить корзину
+        </button>
+        <Link className="btn btn-primary" href="/shop">
+          Продолжить покупки
+        </Link>
+      </div>
     </div>
   );
 }

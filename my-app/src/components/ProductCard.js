@@ -1,18 +1,33 @@
 "use client";
 
-import { useCart } from "@/context/CartContext";
+import Link from "next/link";
+import AddToCartButton from "./AddToCartButton";
 
 export default function ProductCard({ product }) {
-  const { addToCart } = useCart();
-
   return (
     <div className="card">
-      <h3>{product.title}</h3>
-      <p>{product.description}</p>
-      <p><b>{product.price} ₽</b></p>
-      <button className="button" onClick={() => addToCart(product)}>
-        В корзину
-      </button>
+      <h3 className="font-semibold text-lg">{product.name}</h3>
+
+      {product.description && (
+        <p className="text-sm text-gray-600 mt-2">
+          {product.description}
+        </p>
+      )}
+
+      <div className="mt-4 flex justify-between items-center">
+        <span className="font-bold text-green-700">
+          {product.price} ₽
+        </span>
+
+        <AddToCartButton product={product} />
+      </div>
+
+      <Link
+        href={`/shop/${product.id}`}
+        className="block mt-3 text-sm text-green-700 hover:underline"
+      >
+        Подробнее →
+      </Link>
     </div>
   );
 }

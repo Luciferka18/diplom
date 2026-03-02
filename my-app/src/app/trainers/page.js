@@ -1,49 +1,44 @@
-import { apiGet } from "@/services/api";
+import { apiGet } from '@/services/api';
+import Link from 'next/link';
 
 export default async function TrainersPage() {
   let trainers = [];
-  let backendMissing = false;
 
   try {
-    trainers = await apiGet("/trainers");
-  } catch {
-    backendMissing = true;
+    trainers = await apiGet('/trainers');
+  } catch (e) {
+    console.error('[trainers] failed to load list', e);
+    trainers = [];
   }
 
   return (
-    <div className="space-y-10">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Наши тренеры</h1>
-        <p className="text-gray-500">Профессионалы, которые приведут тебя к результату</p>
-      </div>
+    <main className="container-fitlab py-10">
+      <h1 className="text-3xl font-bold">Наши тренеры</h1>
+      <p className="mt-2 text-gray-600">
+        Профессионалы, которые приведут тебя к результату
+      </p>
 
-      {backendMissing && <p>Not implemented on backend</p>}
+      {trainers.length === 0 ? (
+        <p className="mt-6">Тренеры не найдены</p>
+      ) : (
+        <ul className="mt-6 space-y-3">
+          {trainers.map((t) => (
+            <li key={t.id} className="border rounded-md p-4">
+              <div className="font-semibold">{t.name}</div>
+              <div className="text-sm text-gray-600">
+                {t.specialization}
+              </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
-        {trainers.map(t => (
-          <div
-            key={t.id}
-            className="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden"
-          >
-            <div className="h-48 bg-gradient-to-br from-[#BBD9B2] to-[#2D6033] flex items-center justify-center text-white font-semibold">
-              Фото
-            </div>
-
-            <div className="p-5 space-y-2">
-              <h3 className="font-semibold text-lg">{t.name}</h3>
-              <p className="text-sm text-[#2D6033]">{t.specialization}</p>
-              <p className="text-sm text-gray-500 line-clamp-3">{t.bio}</p>
-
-              <a
+              <Link
                 href={`/trainers/${t.id}`}
-                className="inline-block mt-2 text-sm font-medium text-[#2D6033] hover:underline"
+                className="underline mt-2 inline-block"
               >
-                Подробнее →
-              </a>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+                Подробнее
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </main>
   );
 }

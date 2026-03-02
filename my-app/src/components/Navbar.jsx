@@ -1,53 +1,105 @@
+// src/components/Navbar.jsx
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
 export default function Navbar() {
-  const [user, setUser] = useState(null);
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
 
+  const items = useMemo(
+    () => [
+      { href: "/trainers", label: "Тренеры" },
+      { href: "/programs", label: "Программы" },
+      { href: "/blog", label: "Статьи" },
+      { href: "/shop", label: "Магазин" },
+      { href: "/cart", label: "Корзина" },
+      { href: "/account", label: "Кабинет" },
+    ],
+    []
+  );
+
+  // закрывать меню при смене маршрута
   useEffect(() => {
-    const u = localStorage.getItem("user");
-    if (u) setUser(JSON.parse(u));
+    setOpen(false);
+  }, [pathname]);
+
+  // закрывать по ESC
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const logout = () => {
-    localStorage.removeItem("user");
-    location.href = "/login";
+  const isActive = (href) => {
+    if (href === "/") return pathname === "/";
+    return pathname === href || pathname.startsWith(href + "/");
   };
 
   return (
-    <header className="bg-white border-b sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
-        <Link href="/" className="text-xl font-bold text-[#2D6033]">
-          FitLab
-        </Link>
+    <>
+      <header className="nav2">
+        <div className="nav2__inner">
+          <Link href="/" className="nav2__brand" aria-label="FitLab home">
+            <span className="nav2__brandMark" aria-hidden="true">⚡</span>
+            <span className="nav2__brandText">FitLab</span>
+          </Link>
 
-        <nav className="flex gap-6 items-center text-sm font-medium text-gray-600">
-          <Link href="/trainers" className="hover:text-[#2D6033]">Тренеры</Link>
-          <Link href="/programs" className="hover:text-[#2D6033]">Программы</Link>
-          <Link href="/shop" className="hover:text-[#2D6033]">Магазин</Link>
-
-          {user ? (
-            <>
-              <span className="text-gray-400 text-sm">{user.name}</span>
-              <button
-                onClick={logout}
-                className="bg-[#2D6033] text-white px-4 py-1.5 rounded-lg hover:opacity-90"
+          <nav className="nav2__menu" aria-label="Primary navigation">
+            {items.map((it) => (
+              <Link
+                key={it.href}
+                href={it.href}
+                className={`nav2__link ${isActive(it.href) ? "nav2__link--active" : ""}`}
               >
-                Выйти
-              </button>
-            </>
-          ) : (
-            <Link
-              href="/login"
-              className="bg-[#2D6033] text-white px-4 py-1.5 rounded-lg hover:opacity-90"
-            >
-              Войти
-            </Link>
-          )}
-        </nav>
+                {it.label}
+              </Link>
+            ))}
+          </nav>
+
+          <button
+            type="button"
+            className={`nav2__burger ${open ? "nav2__burger--open" : ""}`}
+            aria-label="Open menu"
+            aria-expanded={open ? "true" : "false"}
+            onClick={() => setOpen((v) => !v)}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+        </div>
+      </header>
+
+      {/* Mobile drawer */}
+      <div className={`nav2__drawer ${open ? "nav2__drawer--open" : ""}`} aria-hidden={open ? "false" : "true"}>
+        <div className="nav2__drawerPanel">
+          <div className="nav2__drawerHead">
+            <div className="nav2__drawerTitle">Меню</div>
+            <button type="button" className="nav2__drawerClose" onClick={() => setOpen(false)} aria-label="Close menu">
+              ✕
+            </button>
+          </div>
+
+          <div className="nav2__drawerList">
+            {items.map((it) => (
+              <Link
+                key={it.href}
+                href={it.href}
+                className={`nav2__drawerLink ${isActive(it.href) ? "nav2__drawerLink--active" : ""}`}
+              >
+                {it.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <button className="nav2__backdrop" aria-label="Close" onClick={() => setOpen(false)} />
       </div>
-    </header>
+    </>
   );
 }

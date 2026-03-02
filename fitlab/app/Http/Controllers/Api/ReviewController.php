@@ -3,36 +3,48 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\ReviewResource;
-use App\Models\Program;
 use App\Models\Review;
-use App\Models\Trainer;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class ReviewController extends Controller
 {
+    /**
+     * Публичный список отзывов (для главной страницы)
+     */
+    public function index(Request $request)
+    {
+        $limit = (int) $request->query('limit', 6);
+        $limit = max(1, min($limit, 50));
+
+        $reviews = Review::query()
+            ->with(['user:id,name,login'])
+            ->latest()
+            ->take($limit)
+            ->get();
+
+        return response()->json($reviews);
+    }
+
+    /**
+     * Создание отзыва (только авторизованные)
+     */
     public function store(Request $request)
     {
         $data = $request->validate([
-            'reviewable_type' => ['required', Rule::in(['trainer', 'program'])],
-            'reviewable_id' => ['required', 'integer'],
-            'rating' => ['required', 'integer', 'between:1,5'],
-            'text' => ['required', 'string', 'max:2000'],
+            'rating' => ['required', 'integer', 'min:1', 'max:5'],
+            'text' => ['required', 'string', 'min:2', 'max:2000'],
+            'reviewable_type' => ['required', 'string', 'max:50'],
+            'reviewable_id' => ['required', 'integer', 'min:1'],
         ]);
 
-        $reviewable = $data['reviewable_type'] === 'trainer'
-            ? Trainer::findOrFail($data['reviewable_id'])
-            : Program::findOrFail($data['reviewable_id']);
+        $review = new Review();
+        $review->user_id = $request->user()->id;
+        $review->rating = $data['rating'];
+        $review->text = $data['text'];
+        $review->reviewable_type = $data['reviewable_type'];
+        $review->reviewable_id = $data['reviewable_id'];
+        $review->save();
 
-        $review = new Review([
-            'user_id' => $request->user()->id,
-            'rating' => $data['rating'],
-            'text' => $data['text'],
-        ]);
-
-        $reviewable->reviews()->save($review);
-
-        return new ReviewResource($review->load('user'));
+        return response()->json($review->load(['user:id,name,login']), 201);
     }
 }

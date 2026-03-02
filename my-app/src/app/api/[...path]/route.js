@@ -1,84 +1,68 @@
-// app/api/[...path]/route.js
+// src/app/api/[...path]/route.js
+import { NextResponse } from "next/server";
 
-const backendOrigin = process.env.BACKEND_ORIGIN || "http://127.0.0.1:8000";
-const backendApiPrefix = process.env.BACKEND_API_PREFIX || "/api";
+const backendOrigin = (process.env.BACKEND_ORIGIN || "http://127.0.0.1:8000").replace(/\/+$/, "");
+const backendApiPrefix = (process.env.BACKEND_API_PREFIX || "/api").replace(/\/+$/, "");
 
-function normalizePrefix(prefix) {
-  if (!prefix) return "";
-  const withSlash = prefix.startsWith("/") ? prefix : `/${prefix}`;
-  return withSlash.replace(/\/+$/, "");
+function buildTarget(reqUrl, pathParts) {
+  const url = new URL(reqUrl);
+  const parts = Array.isArray(pathParts) ? pathParts : [];
+  const path = parts.join("/");
+  return `${backendOrigin}${backendApiPrefix}/${path}${url.search}`;
 }
 
-function buildTargetUrl(pathSegments = [], searchParams) {
-  const joined = Array.isArray(pathSegments) ? pathSegments.join("/") : "";
-  const base = backendOrigin.replace(/\/+$/, "");
-  const prefix = normalizePrefix(backendApiPrefix);
-  const path = joined ? `/${joined}` : "";
-  const url = new URL(`${base}${prefix}${path}`);
+async function forward(req, ctx) {
+  // Next 16: params может быть Promise
+  const params = ctx?.params ? await ctx.params : {};
+  const target = buildTarget(req.url, params.path);
 
-  if (searchParams) {
-    for (const [key, value] of searchParams.entries()) {
-      url.searchParams.append(key, value);
-    }
-  }
+  const method = req.method.toUpperCase();
+  const hasBody = !["GET", "HEAD"].includes(method);
 
-  return url.toString();
-}
+  const headers = new Headers();
+  headers.set("accept", "application/json");
 
-async function proxyRequest(request, ctx) {
-  const incomingUrl = new URL(request.url);
+  const ct = req.headers.get("content-type");
+  if (ct) headers.set("content-type", ct);
 
-  const rawParams = ctx?.params;
-  const resolvedParams =
-    rawParams && typeof rawParams.then === "function" ? await rawParams : rawParams;
+  // ✅ пробрасываем Authorization если клиент прислал
+  const auth = req.headers.get("authorization");
+  if (auth) headers.set("authorization", auth);
 
-  const pathSegments = resolvedParams?.path || [];
-  const targetUrl = buildTargetUrl(pathSegments, incomingUrl.searchParams);
+  // ✅ пробрасываем cookies (санктум/сессии если используешь)
+  const cookie = req.headers.get("cookie");
+  if (cookie) headers.set("cookie", cookie);
 
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.delete("host");
-  requestHeaders.delete("connection");
-  requestHeaders.delete("content-length");
-
-  const init = {
-    method: request.method,
-    headers: requestHeaders,
-    body: ["GET", "HEAD"].includes(request.method)
-      ? undefined
-      : await request.arrayBuffer(),
-    redirect: "manual",
+  const r = await fetch(target, {
+    method,
+    headers,
+    body: hasBody ? await req.text() : undefined,
     cache: "no-store",
-  };
+  });
 
-  try {
-    const backendResponse = await fetch(targetUrl, init);
+  const respCT = r.headers.get("content-type") || "";
 
-    const responseHeaders = new Headers(backendResponse.headers);
-    responseHeaders.delete("content-encoding");
-    responseHeaders.delete("transfer-encoding");
-
-    return new Response(backendResponse.body, {
-      status: backendResponse.status,
-      statusText: backendResponse.statusText,
-      headers: responseHeaders,
-    });
-  } catch (error) {
-    return Response.json(
-      {
-        ok: false,
-        error: "Backend API is unavailable",
-        details: error?.message ?? String(error),
-        backendOrigin,
-        targetUrl,
-      },
-      { status: 503 }
-    );
+  // если вернулся JSON
+  if (respCT.toLowerCase().includes("application/json")) {
+    const data = await r.json().catch(() => ({}));
+    return NextResponse.json(data, { status: r.status });
   }
+
+  // если Laravel вернул HTML/текст — покажем как JSON, чтобы видеть проблему
+  const text = await r.text().catch(() => "");
+  return NextResponse.json(
+    {
+      message: "Backend returned non-JSON response",
+      status: r.status,
+      content_type: respCT,
+      raw: text.slice(0, 5000),
+    },
+    { status: r.status }
+  );
 }
 
-export const GET = proxyRequest;
-export const POST = proxyRequest;
-export const PUT = proxyRequest;
-export const PATCH = proxyRequest;
-export const DELETE = proxyRequest;
-export const OPTIONS = proxyRequest;
+export const GET = forward;
+export const POST = forward;
+export const PUT = forward;
+export const PATCH = forward;
+export const DELETE = forward;

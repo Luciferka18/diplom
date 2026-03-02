@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->unsignedTinyInteger('experience_years')->default(0);
             $table->text('bio')->nullable();
             $table->string('photo_url')->nullable();
-            $table->string('instagram')->nullable();
+            $table->string('telegram')->nullable();
             $table->timestamps();
         });
     }

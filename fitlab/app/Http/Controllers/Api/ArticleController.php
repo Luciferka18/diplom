@@ -3,76 +3,122 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\ArticleResource;
 use App\Models\Article;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class ArticleController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $query = Article::with('author')->where('status', 'published');
-
-        if ($request->filled('q')) {
-            $q = $request->string('q');
-            $query->where(fn($w) => $w->where('title', 'like', "%{$q}%")->orWhere('content', 'like', "%{$q}%"));
-        }
-
-        if ($request->boolean('paginate')) {
-            return ArticleResource::collection($query->orderByDesc('published_at')->paginate((int) $request->integer('per_page', 12)));
-        }
-
-        return ArticleResource::collection($query->orderByDesc('published_at')->limit((int) $request->integer('per_page', 12))->get());
+        return Article::query()
+            ->with('author')
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            ->get();
     }
 
-    public function show(string $article)
+    public function show(Article $article)
     {
-        $item = Article::with('author')
-            ->where('slug', $article)
-            ->orWhere('id', $article)
-            ->firstOrFail();
+        return $article->load('author');
+    }
 
-        return new ArticleResource($item);
+    public function showBySlug(string $slug)
+    {
+        $article = Article::query()->where('slug', $slug)->firstOrFail();
+        return $article->load('author');
     }
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'title' => ['required', 'string'],
-            'slug' => ['nullable', 'string', 'unique:articles,slug'],
-            'content' => ['required', 'string'],
-            'status' => ['nullable', 'in:draft,published'],
-            'published_at' => ['nullable', 'date'],
-        ]);
+        $data = $this->validateArticle($request);
 
-        $data['author_user_id'] = $request->user()->id;
-        $data['slug'] = $data['slug'] ?? Str::slug($data['title']) . '-' . Str::lower(Str::random(4));
+        $data['author_id'] = $request->user()->id;
 
-        $article = Article::create($data);
+        $data['slug'] = $this->makeUniqueSlug(
+            $data['title'],
+            $data['slug'] ?? null
+        );
 
-        return new ArticleResource($article->load('author'));
+        if (($data['status'] ?? 'draft') === 'published' && empty($data['published_at'])) {
+            $data['published_at'] = now();
+        }
+
+        $article = Article::create($data)->load('author');
+
+        return response()->json($article, 201);
     }
 
     public function update(Request $request, Article $article)
     {
-        $this->authorize('update', $article);
-        $data = $request->validate([
-            'title' => ['sometimes', 'string'],
-            'slug' => ['sometimes', 'string', 'unique:articles,slug,' . $article->id],
-            'content' => ['sometimes', 'string'],
-            'status' => ['sometimes', 'in:draft,published'],
-            'published_at' => ['nullable', 'date'],
-        ]);
+        $data = $this->validateArticle($request, $article);
+
+        if (array_key_exists('title', $data) || array_key_exists('slug', $data)) {
+            $data['slug'] = $this->makeUniqueSlug(
+                $data['title'] ?? $article->title,
+                $data['slug'] ?? $article->slug,
+                $article->id
+            );
+        }
+
+        if (($data['status'] ?? $article->status) === 'published') {
+            if (empty($data['published_at']) && empty($article->published_at)) {
+                $data['published_at'] = now();
+            }
+        } else {
+            // если переводят в draft — published_at можно обнулить
+            if (array_key_exists('status', $data)) {
+                $data['published_at'] = null;
+            }
+        }
+
         $article->update($data);
 
-        return new ArticleResource($article->fresh('author'));
+        return $article->fresh()->load('author');
     }
 
-    public function destroy(Request $request, Article $article)
+    public function destroy(Article $article)
     {
-        $this->authorize('delete', $article);
         $article->delete();
-        return response()->json(['message' => 'Deleted']);
+        return response()->json(['ok' => true]);
+    }
+
+    private function validateArticle(Request $request, ?Article $article = null): array
+    {
+        $id = $article?->id;
+
+        return $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'slug'  => ['nullable', 'string', 'max:255', Rule::unique('articles', 'slug')->ignore($id)],
+            'content' => ['required', 'string'],
+            'status' => ['nullable', 'string', Rule::in(['draft', 'published'])],
+            'published_at' => ['nullable', 'date'],
+        ]);
+    }
+
+    private function makeUniqueSlug(string $title, ?string $slug = null, ?int $ignoreId = null): string
+    {
+        $base = trim((string)$slug) !== '' ? $slug : Str::slug($title);
+
+        // если Str::slug вернул пусто (бывает при отсутствии intl) — делаем fallback
+        if ($base === '') {
+            $base = 'article-' . Str::lower(Str::random(8));
+        }
+
+        $candidate = $base;
+        $i = 2;
+
+        while (
+            Article::query()
+                ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
+                ->where('slug', $candidate)
+                ->exists()
+        ) {
+            $candidate = $base . '-' . $i;
+            $i++;
+        }
+
+        return $candidate;
     }
 }
