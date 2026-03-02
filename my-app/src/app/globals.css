@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===== Base ===== */
 :root {
   --bg: #070d19;
   --accent: #34d399;
