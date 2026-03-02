@@ -32,22 +32,22 @@ export default function HomePage() {
       </Section>
 
       <Section className="py-8 md:py-10">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
-            {quickLinks.map((item) => (
-              <Card key={item.href} as={Link} href={item.href} className={`${item.span} h-full group p-6`}>
-                <div className="flex h-full flex-col">
-                  <div className="mb-3 text-2xl" aria-hidden="true">{item.icon}</div>
-                  <div className="text-xl font-bold">{item.title}</div>
-                  <p className="mt-2 flex-1 text-white/70">{item.text}</p>
-                  <div className="mt-5 font-semibold text-emerald-200 group-hover:text-white transition">{item.cta}</div>
-                </div>
-              </Card>
-            ))}
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
+          {quickLinks.map((item) => (
+            <Card key={item.href} as={Link} href={item.href} className={`${item.span} h-full group p-6`}>
+              <div className="flex h-full flex-col">
+                <div className="mb-3 text-2xl" aria-hidden="true">{item.icon}</div>
+                <div className="text-xl font-bold">{item.title}</div>
+                <p className="mt-2 flex-1 text-white/70">{item.text}</p>
+                <div className="mt-5 font-semibold text-emerald-200 group-hover:text-white transition">{item.cta}</div>
+              </div>
+            </Card>
+          ))}
+        </div>
       </Section>
 
       <Section className="pt-8 md:pt-10">
-          <HomeReviews />
+        <HomeReviews />
       </Section>
     </>
   );
