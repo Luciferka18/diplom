@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
-import { Textarea } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Input.jsx";
 
 function Stars({ value = 0 }) {
   const v = Math.max(0, Math.min(5, Number(value) || 0));
