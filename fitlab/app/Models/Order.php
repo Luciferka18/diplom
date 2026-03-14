@@ -2,22 +2,25 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Order extends Model
 {
-    use HasFactory;
+    protected $fillable = [
+        'user_id','status','items_count','subtotal','delivery','total',
+        'customer_name','customer_phone','customer_email',
+        'address_line','city','postal_code','comment',
+    ];
 
-    protected $fillable = ['user_id', 'status', 'total_amount', 'currency', 'payment_status', 'customer_name', 'customer_phone', 'customer_email'];
-
-    public function items()
+    public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
     }
 
-    public function paymentIntents()
+    public function user(): BelongsTo
     {
-        return $this->hasMany(PaymentIntent::class);
+        return $this->belongsTo(User::class);
     }
 }

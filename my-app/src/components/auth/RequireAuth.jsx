@@ -16,8 +16,21 @@ export default function RequireAuth({ children }) {
     }
   }, [loading, isAuthed, router, pathname]);
 
-  if (loading) return <div style={{ padding: 16 }}>Загрузка профиля…</div>;
-  if (!isAuthed) return <div style={{ padding: 16 }}>Переадресация на вход…</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <div className="text-[color:var(--muted)]">Загрузка профиля...</div>
+      </div>
+    );
+  }
+  
+  if (!isAuthed) {
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <div className="text-[color:var(--muted)]">Переадресация на вход...</div>
+      </div>
+    );
+  }
 
   return children;
 }

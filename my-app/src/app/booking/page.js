@@ -135,9 +135,10 @@ export default function BookingPage({ searchParams }) {
               onChange={handleChange("client_comment")}
             />
           </div>
-          <button type="submit" className="btn-primary w-full text-sm">
+          <button size="lg" type="submit" className="btn-primary w-full text-sm">
             Отправить заявку
           </button>
+          
           {status && (
             <p
               className={`text-xs ${

@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\OrderResource;
-use App\Models\Cart;
 use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -14,62 +14,102 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'customer_name' => ['required', 'string', 'max:255'],
-            'customer_phone' => ['required', 'string', 'max:255'],
-            'customer_email' => ['nullable', 'email'],
-            'items' => ['nullable', 'array'],
-            'items.*.product_id' => ['required_with:items', 'exists:products,id'],
-            'items.*.quantity' => ['required_with:items', 'integer', 'min:1'],
+            'items' => ['required','array','min:1'],
+            'items.*.product_id' => ['required','integer','exists:products,id'],
+            'items.*.quantity' => ['required','integer','min:1','max:999'],
+
+            'customer_name' => ['nullable','string','max:255'],
+            'customer_phone' => ['nullable','string','max:50'],
+            'customer_email' => ['nullable','email','max:255'],
+
+            'address_line' => ['nullable','string','max:255'],
+            'city' => ['nullable','string','max:255'],
+            'postal_code' => ['nullable','string','max:32'],
+
+            'comment' => ['nullable','string','max:2000'],
         ]);
 
-        $order = DB::transaction(function () use ($request, $data) {
-            $order = Order::create([
-                'user_id' => $request->user()->id,
-                'status' => 'created',
-                'payment_status' => 'pending',
-                'currency' => 'RUB',
-                'total_amount' => 0,
-                'customer_name' => $data['customer_name'],
-                'customer_phone' => $data['customer_phone'],
-                'customer_email' => $data['customer_email'] ?? null,
-            ]);
+        $userId = $request->user()?->id;
 
-            $sourceItems = $data['items'] ?? null;
-            if (!$sourceItems) {
-                $cart = Cart::with('items')->where('user_id', $request->user()->id)->where('status', 'active')->firstOrFail();
-                $sourceItems = $cart->items->map(fn($item) => ['product_id' => $item->product_id, 'quantity' => $item->qty])->all();
-                $cart->update(['status' => 'converted']);
-            }
+        // Собираем товары (и цены) только из БД — клиенту не доверяем
+        $ids = collect($data['items'])->pluck('product_id')->unique()->values();
+        $products = Product::query()->whereIn('id', $ids)->get()->keyBy('id');
 
-            $total = 0;
-            foreach ($sourceItems as $item) {
-                $product = \App\Models\Product::findOrFail($item['product_id']);
-                $qty = (int) $item['quantity'];
-                $order->items()->create([
-                    'product_id' => $product->id,
-                    'qty' => $qty,
-                    'price_snapshot' => $product->price,
-                ]);
-                $total += $product->price * $qty;
-            }
+        // Если вдруг какого-то id нет (хотя validate должен отловить)
+        if ($products->count() !== $ids->count()) {
+            return response()->json(['message' => 'Некоторые товары не найдены.'], 422);
+        }
 
-            $order->update(['total_amount' => $total]);
+        $itemsCount = 0;
+        $subtotal = 0;
 
-            return $order->fresh('items.product');
+        $normalizedItems = collect($data['items'])->map(function ($it) use ($products, &$itemsCount, &$subtotal) {
+            $p = $products[$it['product_id']];
+            $qty = (int)$it['quantity'];
+
+            // Цена в копейках (если в БД decimal)
+            $priceRub = (float)$p->price;
+            $price = (int) round($priceRub * 100);
+
+            $lineTotal = $price * $qty;
+
+            $itemsCount += $qty;
+            $subtotal += $lineTotal;
+
+            return [
+                'product_id' => $p->id,
+                'name' => $p->name,
+                'price' => $price,
+                'quantity' => $qty,
+                'line_total' => $lineTotal,
+            ];
         });
 
-        return new OrderResource($order);
-    }
+        // Пример доставки (пока 0)
+        $delivery = 0;
+        $total = $subtotal + $delivery;
 
-    public function index(Request $request)
-    {
-        $query = Order::with('items.product')->where('user_id', $request->user()->id);
-        return OrderResource::collection($query->latest()->paginate((int) $request->integer('per_page', 10)));
+        $order = DB::transaction(function () use ($data, $userId, $itemsCount, $subtotal, $delivery, $total, $normalizedItems) {
+            $order = Order::create([
+                'user_id' => $userId,
+                'status' => 'new',
+                'items_count' => $itemsCount,
+                'subtotal' => $subtotal,
+                'delivery' => $delivery,
+                'total' => $total,
+
+                'customer_name' => $data['customer_name'] ?? null,
+                'customer_phone' => $data['customer_phone'] ?? null,
+                'customer_email' => $data['customer_email'] ?? null,
+                'address_line' => $data['address_line'] ?? null,
+                'city' => $data['city'] ?? null,
+                'postal_code' => $data['postal_code'] ?? null,
+                'comment' => $data['comment'] ?? null,
+            ]);
+
+            OrderItem::insert(
+                $normalizedItems->map(fn($i) => array_merge($i, [
+                    'order_id' => $order->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]))->all()
+            );
+
+            return $order->load('items');
+        });
+
+        return response()->json([
+            'order' => $order,
+        ], 201);
     }
 
     public function show(Request $request, Order $order)
     {
-        abort_unless($request->user()->isAdmin() || $order->user_id === $request->user()->id, 403);
-        return new OrderResource($order->load('items.product'));
+        // Если хочешь ограничить доступ: только владелец
+        if ($order->user_id && $request->user()?->id !== $order->user_id) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        return response()->json(['order' => $order->load('items')]);
     }
-}
+}   

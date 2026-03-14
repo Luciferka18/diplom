@@ -9,11 +9,18 @@ return new class extends Migration {
     {
         Schema::create('order_items', function (Blueprint $table) {
             $table->id();
+
             $table->foreignId('order_id')->constrained()->cascadeOnDelete();
             $table->foreignId('product_id')->constrained()->restrictOnDelete();
-            $table->unsignedInteger('qty')->default(1);
-            $table->decimal('price_snapshot', 10, 2);
+
+            $table->string('name'); // snapshot
+            $table->unsignedBigInteger('price'); // копейки (snapshot)
+            $table->unsignedInteger('quantity');
+            $table->unsignedBigInteger('line_total');
+
             $table->timestamps();
+
+            $table->unique(['order_id', 'product_id']);
         });
     }
 

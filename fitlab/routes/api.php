@@ -40,6 +40,7 @@ Route::get('/articles/slug/{slug}', [\App\Http\Controllers\Api\ArticleController
 
 Route::get('/reviews', [ReviewController::class, 'index']);
 
+Route::post('/orders', [OrderController::class, 'store']); // без middleware
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me']);
@@ -54,10 +55,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/cart/items', [CartController::class, 'addItem']);
     Route::patch('/cart/items/{item}', [CartController::class, 'updateItem']);
     Route::delete('/cart/items/{item}', [CartController::class, 'removeItem']);
-
-    Route::post('/orders', [OrderController::class, 'store']);
-    Route::get('/orders', [OrderController::class, 'index']);
-    Route::get('/orders/{order}', [OrderController::class, 'show']);
 
     Route::post('/payments/intent', [PaymentController::class, 'intent']);
     Route::post('/payments/confirm', [PaymentController::class, 'confirm']);

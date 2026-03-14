@@ -40,7 +40,7 @@ export default function Navbar() {
       <header className="sticky top-0 z-50 border-b backdrop-blur-xl border-[color:var(--stroke)] bg-[color:var(--panel)]">
         <Container className="h-16 flex items-center justify-between gap-4">
           <Link href="/" className="font-extrabold tracking-tight text-[color:var(--text)] text-lg">
-            Fit<span className="text-[color:var(--accent)]">Lab</span>
+            Nash<span className="text-[color:var(--accent)]">Fit</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-1 rounded-2xl border border-[color:var(--stroke)] bg-[color:var(--panel)] p-1.5" aria-label="Primary navigation">

@@ -38,7 +38,7 @@ export default function HomePage() {
     <>
       <Section className="pt-12 md:pt-16 pb-8 md:pb-10">
         <div className="mx-auto max-w-5xl text-center">
-          <Badge className="mb-4">Новая энергия FitLab</Badge>
+          <Badge className="mb-4">Новая энергия NashFit</Badge>
           <h1 className="text-5xl md:text-6xl font-black leading-tight text-[color:var(--text)]">
             Единая fitness-платформа для тренировок, питания и прогресса
           </h1>
@@ -75,7 +75,7 @@ export default function HomePage() {
         </div>
       </Section>
 
-      <Section title="Почему FitLab" subtitle="Собрали всё нужное для уверенного и комфортного прогресса." className="py-8 md:py-10">
+      <Section title="Почему NashFit" subtitle="Собрали всё нужное для уверенного и комфортного прогресса." className="py-8 md:py-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
           {benefits.map((b) => (
             <Card key={b.title} className="h-full">
@@ -87,7 +87,7 @@ export default function HomePage() {
         </div>
       </Section>
 
-      <Section title="Разделы платформы" subtitle="Быстрый переход к ключевым возможностям FitLab." className="py-8 md:py-10">
+      <Section title="Разделы платформы" subtitle="Быстрый переход к ключевым возможностям NashFit." className="py-8 md:py-10">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-5 md:gap-6">
           {quickLinks.map((item) => (
             <Card
@@ -110,7 +110,7 @@ export default function HomePage() {
         </div>
       </Section>
 
-      <Section title="Отзывы сообщества" subtitle="Честная обратная связь от пользователей FitLab." className="pt-8 md:pt-10">
+      <Section>
         <HomeReviews />
       </Section>
     </>
