@@ -121,6 +121,16 @@ function LoginForm() {
           )}
         </Button>
 
+        {/* Ссылка на сброс пароля */}
+        <div className="text-center">
+          <a
+            href="/forgot-password"
+            className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
+          >
+            Забыли пароль?
+          </a>
+        </div>
+
         {/* Ссылка на регистрацию */}
         <p className="text-center text-sm text-[color:var(--muted)]">
           Нет аккаунта?{" "}

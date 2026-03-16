@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProgramController;
@@ -37,6 +38,11 @@ Route::post('/contacts', [ContactController::class, 'send']);
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/2fa/verify', [TwoFactorController::class, 'verify']);
+
+// Сброс пароля (публичные)
+Route::post('/auth/password/reset', [PasswordResetController::class, 'sendResetLink']);
+Route::post('/auth/password/update', [PasswordResetController::class, 'resetPassword']);
+Route::post('/auth/password/verify-token', [PasswordResetController::class, 'verifyToken']);
 
 Route::get('/articles/slug/{slug}', [\App\Http\Controllers\Api\ArticleController::class, 'showBySlug']);
 
