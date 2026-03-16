@@ -55,7 +55,7 @@ export default function TwoFactorSettingsPage() {
     setSuccess("");
     try {
       const data = await apiPost("/2fa/generate");
-      setQrCodeUrl(data.qr_code_url);
+      setQrCodeUrl(data.qr_code_base64 || data.qr_code_url);
       setSecret(data.secret);
       setRecoveryCodes(data.recovery_codes);
       setStep(1);
@@ -224,23 +224,29 @@ export default function TwoFactorSettingsPage() {
           <h3 className="text-xl font-semibold text-white mb-4">
             Шаг 1: Отсканируйте QR-код
           </h3>
-          
+
           <div className="flex flex-col items-center mb-6">
             <div className="bg-white p-4 rounded-xl mb-4">
-              <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrCodeUrl)}`}
-                alt="2FA QR Code"
-                className="w-48 h-48"
-              />
+              {qrCodeUrl ? (
+                <img
+                  src={qrCodeUrl.startsWith('data:') ? qrCodeUrl : `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrCodeUrl)}`}
+                  alt="2FA QR Code"
+                  className="w-48 h-48"
+                />
+              ) : (
+                <div className="w-48 h-48 flex items-center justify-center text-[color:var(--muted)]">
+                  Загрузка QR...
+                </div>
+              )}
             </div>
             <p className="text-center text-[color:var(--muted)] mb-4">
               Отсканируйте этот код в приложении Google Authenticator, Authy или аналогичном
             </p>
-            
+
             <div className="flex items-center gap-2 p-3 rounded-xl bg-[color:var(--panel)] border border-[color:var(--stroke)]">
               <Key className="w-4 h-4 text-[color:var(--muted)]" />
               <span className="text-[color:var(--text)] font-mono">{secret}</span>
-              <button 
+              <button
                 onClick={() => copyCode(secret)}
                 className="ml-2 p-1 rounded hover:bg-[color:var(--stroke)]"
               >

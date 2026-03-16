@@ -6,6 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
+use PragmaRX\Google2FA\Google2FA;
 
 class TwoFactorController extends Controller
 {
@@ -15,7 +20,7 @@ class TwoFactorController extends Controller
     public function generateSecret(Request $request)
     {
         $user = $request->user();
-        
+
         if ($user->hasEnabledTwoFactor()) {
             return response()->json([
                 'message' => '2FA уже включен'
@@ -26,11 +31,34 @@ class TwoFactorController extends Controller
         $qrCodeUrl = $user->getTwoFactorQrCodeUrl($secret);
         $recoveryCodes = $user->generateRecoveryCodes();
 
+        // Генерируем QR-код в base64
+        $qrCodeBase64 = $this->generateQrCodeBase64($qrCodeUrl);
+
         return response()->json([
             'secret' => $secret,
             'qr_code_url' => $qrCodeUrl,
+            'qr_code_base64' => $qrCodeBase64,
             'recovery_codes' => $recoveryCodes,
         ]);
+    }
+
+    /**
+     * Генерация QR-кода в base64
+     */
+    private function generateQrCodeBase64(string $qrCodeUrl): string
+    {
+        try {
+            $renderer = new ImageRenderer(
+                new RendererStyle(300),
+                new ImagickImageBackEnd()
+            );
+            $writer = new Writer($renderer);
+            $qrCodeImage = $writer->writeString($qrCodeUrl);
+            return 'data:image/png;base64,' . base64_encode($qrCodeImage);
+        } catch (\Exception $e) {
+            // Фолбэк на внешний API
+            return 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qrCodeUrl);
+        }
     }
 
     /**
