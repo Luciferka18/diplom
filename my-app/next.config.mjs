@@ -5,10 +5,6 @@ const nextConfig = {
       "@": "./src",
     },
   },
-  // Отключаем статическую генерацию для страниц с useSearchParams
-  experimental: {
-    serverComponentsExternalPackages: [],
-  },
 };
 
 export default nextConfig;
