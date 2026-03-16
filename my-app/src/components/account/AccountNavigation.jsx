@@ -37,6 +37,11 @@ const navigation = [
     href: "/account/reviews",
     icon: Star,
   },
+  {
+    name: "Безопасность",
+    href: "/account/security",
+    icon: Shield,
+  },
 ];
 
 const adminNavigation = [

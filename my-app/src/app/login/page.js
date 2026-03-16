@@ -42,7 +42,14 @@ function LoginForm() {
       if (!id) throw new Error("Введите логин или email");
       if (!pwd) throw new Error("Введите пароль");
 
-      await login(id, pwd);
+      const result = await login(id, pwd);
+      
+      // Если требуется 2FA, перенаправляем на страницу 2FA
+      if (result?.requires_2fa) {
+        router.push(`/2fa?uid=${result.user_id}&2fa=true&next=${encodeURIComponent(nextUrl)}`);
+        return;
+      }
+      
       router.replace(nextUrl);
     } catch (err) {
       setError(err?.message || "Ошибка входа");

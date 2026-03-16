@@ -92,6 +92,11 @@ export function AuthProvider({ children }) {
 
     const data = await apiPost("/auth/login", payload);
 
+    // Проверяем, требуется ли 2FA
+    if (data?.requires_2fa) {
+      return { requires_2fa: true, user_id: data.user_id };
+    }
+
     const u = data?.user ?? data?.data?.user ?? null;
     const t = data?.token ?? data?.data?.token ?? null;
 
@@ -102,6 +107,8 @@ export function AuthProvider({ children }) {
     setUser(u);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
     localStorage.setItem(TOKEN_KEY, t);
+    
+    return { requires_2fa: false, user: u, token: t };
   };
 
   const register = async (payload) => {

@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProgramController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\TrainerController;
+use App\Http\Controllers\Api\TwoFactorController;
 use App\Http\Controllers\Api\WorkoutController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,6 +36,7 @@ Route::get('/articles/{article}', [ArticleController::class, 'show']);
 Route::post('/contacts', [ContactController::class, 'send']);
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/2fa/verify', [TwoFactorController::class, 'verify']);
 
 Route::get('/articles/slug/{slug}', [\App\Http\Controllers\Api\ArticleController::class, 'showBySlug']);
 
@@ -45,6 +47,13 @@ Route::post('/orders', [OrderController::class, 'store']); // без middleware
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
+    Route::get('/auth/2fa/status', [TwoFactorController::class, 'status']);
+
+    // 2FA routes
+    Route::post('/2fa/generate', [TwoFactorController::class, 'generateSecret']);
+    Route::post('/2fa/confirm', [TwoFactorController::class, 'confirmTwoFactor']);
+    Route::post('/2fa/disable', [TwoFactorController::class, 'disableTwoFactor']);
+    Route::post('/2fa/recovery-codes', [TwoFactorController::class, 'regenerateRecoveryCodes']);
 
     Route::post('/reviews', [ReviewController::class, 'store']);
     Route::get('/bookings', [BookingController::class, 'index']);

@@ -47,11 +47,20 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
+        // Если 2FA включен, возвращаем user_id для второго шага
+        if ($user->hasEnabledTwoFactor()) {
+            return response()->json([
+                'requires_2fa' => true,
+                'user_id' => $user->id,
+            ]);
+        }
+
         $token = $user->createToken('fitlab-spa')->plainTextToken;
 
         return response()->json([
             'user' => new UserResource($user),
             'token' => $token,
+            'requires_2fa' => false,
         ]);
     }
 
