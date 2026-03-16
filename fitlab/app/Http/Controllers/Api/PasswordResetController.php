@@ -22,16 +22,19 @@ class PasswordResetController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
+        if (!$user) {
+            return response()->json([
+                'message' => 'Пользователь не найден'
+            ], 404);
+        }
+
         // Генерируем токен сброса
         $token = Password::createToken($user);
-
-        // Отправляем email (в реальном проекте)
-        // Mail::to($user->email)->send(new ResetPasswordMail($token));
 
         // Для SPA возвращаем токен (в продакшене нужно отправлять email)
         return response()->json([
             'message' => 'Ссылка для сброса пароля отправлена на ваш email',
-            'reset_token' => $token, // Удалить в продакшене
+            'reset_token' => $token,
             'email' => $user->email,
         ]);
     }
@@ -55,8 +58,20 @@ class PasswordResetController extends Controller
             ], 404);
         }
 
-        // Проверяем токен
-        if (!Password::tokenCanReset($user, $request->token)) {
+        // Проверяем токен через хеширование
+        $token = $request->token;
+        $payload = Password::getRepository()->get($user);
+        
+        if (!$payload) {
+            return response()->json([
+                'message' => 'Токен не найден'
+            ], 422);
+        }
+
+        // Проверяем, соответствует ли токен
+        $exists = Password::getRepository()->exists($user, $token);
+        
+        if (!$exists) {
             return response()->json([
                 'message' => 'Неверный или истёкший токен'
             ], 422);
@@ -95,11 +110,12 @@ class PasswordResetController extends Controller
             ], 404);
         }
 
-        $isValid = Password::tokenCanReset($user, $request->token);
+        // Проверяем токен через репозиторий
+        $exists = Password::getRepository()->exists($user, $request->token);
 
         return response()->json([
-            'valid' => $isValid,
-            'message' => $isValid ? 'Токен действителен' : 'Неверный или истёкший токен'
+            'valid' => $exists,
+            'message' => $exists ? 'Токен действителен' : 'Неверный или истёкший токен'
         ]);
     }
 }
