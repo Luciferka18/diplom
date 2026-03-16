@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use PragmaRX\Google2FA\Google2FA;
 
 class User extends Authenticatable
 {
@@ -45,7 +44,7 @@ class User extends Authenticatable
      */
     public function generateTwoFactorSecret(): string
     {
-        $google2fa = new Google2FA();
+        $google2fa = new \PragmaRX\Google2FA\Google2FA();
         $secret = $google2fa->generateSecretKey();
         
         $this->forceFill([
@@ -60,7 +59,7 @@ class User extends Authenticatable
      */
     public function getTwoFactorQrCodeUrl(string $secret, string $companyName = 'FitLab'): string
     {
-        $google2fa = new Google2FA();
+        $google2fa = new \PragmaRX\Google2FA\Google2FA();
         return $google2fa->getQRCodeUrl(
             $companyName,
             $this->email ?? $this->login,
@@ -77,7 +76,7 @@ class User extends Authenticatable
             return false;
         }
 
-        $google2fa = new Google2FA();
+        $google2fa = new \PragmaRX\Google2FA\Google2FA();
         return $google2fa->verifyKey($this->two_factor_secret, $code);
     }
 
