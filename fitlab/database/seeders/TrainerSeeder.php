@@ -2,32 +2,49 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Trainer;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class TrainerSeeder extends Seeder
 {
-    public function run()
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
     {
-        Trainer::insert([
+        $trainers = User::where('role', 'trainer')->get();
+
+        $trainerData = [
             [
-                'name' => 'Алексей Иванов',
-                'specialization' => 'Силовой тренинг',
-                'experience_years' => 8,
-                'bio' => 'Специалист по набору мышечной массы и силовым программам.',
+                'specialization' => 'Функциональный тренинг',
+                'experience_years' => 7,
+                'bio' => 'Сертифицированный тренер по функциональному тренингу. Помогаю клиентам безопасно снизить вес и повысить выносливость.',
+                'instagram' => '@anna_fitlab',
             ],
             [
-                'name' => 'Мария Кузнецова',
-                'specialization' => 'Фитнес и похудение',
-                'experience_years' => 6,
-                'bio' => 'Работает с клиентами на снижение веса и тонус тела.',
+                'specialization' => 'Силовая подготовка',
+                'experience_years' => 10,
+                'bio' => 'Мастер спорта по пауэрлифтингу. Обучаю правильной технике базовых упражнений и помогаю набрать мышечную массу.',
+                'instagram' => '@dmitry_strength',
             ],
             [
-                'name' => 'Дмитрий Орлов',
-                'specialization' => 'Кроссфит',
+                'specialization' => 'Йога и стретчинг',
                 'experience_years' => 5,
-                'bio' => 'Функциональные тренировки и выносливость.',
+                'bio' => 'Инструктор по йоге с 5-летним стажем. Помогаю развить гибкость, снять стресс и найти внутреннее равновесие.',
+                'instagram' => '@elena_yoga',
             ],
-        ]);
+        ];
+
+        foreach ($trainers as $index => $trainerUser) {
+            Trainer::create([
+                'user_id' => $trainerUser->id,
+                'name' => $trainerUser->name,
+                'specialization' => $trainerData[$index]['specialization'] ?? 'Фитнес-тренер',
+                'experience_years' => $trainerData[$index]['experience_years'] ?? 3,
+                'bio' => $trainerData[$index]['bio'] ?? 'Опытный тренер',
+                'instagram' => $trainerData[$index]['instagram'] ?? '',
+            ]);
+        }
     }
 }

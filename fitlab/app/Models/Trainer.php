@@ -20,4 +20,9 @@ class Trainer extends Model
     {
         return $this->morphMany(Review::class, 'reviewable')->latest();
     }
+
+    public function tags()
+    {
+        return $this->morphToMany(Tag::class, 'taggable');
+    }
 }

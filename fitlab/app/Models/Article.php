@@ -18,7 +18,7 @@ class Article extends Model
         'content',
         'status',
         'published_at',
-        'author_id',
+        'author_user_id',
     ];
 
     protected $casts = [
@@ -27,6 +27,11 @@ class Article extends Model
 
     public function author()
     {
-        return $this->belongsTo(User::class, 'author_id');
+        return $this->belongsTo(User::class, 'author_user_id');
+    }
+
+    public function tags()
+    {
+        return $this->morphToMany(Tag::class, 'taggable');
     }
 }
