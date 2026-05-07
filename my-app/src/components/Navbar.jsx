@@ -8,20 +8,26 @@ import Button from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { useTheme } from "@/context/ThemeContext";
 
+import { useAuth } from "@/context/AuthContext";
+
 export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const { isTrainer } = useAuth();
 
   const items = useMemo(
-    () => [
-      { href: "/trainers", label: "Тренеры" },
-      { href: "/programs", label: "Программы" },
-      { href: "/blog", label: "Статьи" },
-      { href: "/shop", label: "Магазин" },
-      { href: "/cart", label: "Корзина" },
-      { href: "/account", label: "Кабинет" },
-    ],
+    () => {
+      const base = [
+        { href: "/trainers", label: "Тренеры" },
+        { href: "/programs", label: "Программы" },
+        { href: "/blog", label: "Статьи" },
+        { href: "/shop", label: "Магазин" },
+        { href: "/cart", label: "Корзина" },
+        { href: "/account", label: "Кабинет" },
+      ];
+      return base;
+    },
     []
   );
 
@@ -40,7 +46,7 @@ export default function Navbar() {
       <header className="sticky top-0 z-50 border-b backdrop-blur-xl border-[color:var(--stroke)] bg-[color:var(--panel)]">
         <Container className="h-16 flex items-center justify-between gap-4">
           <Link href="/" className="font-extrabold tracking-tight text-[color:var(--text)] text-lg">
-            Nash<span className="text-[color:var(--accent)]">Fit</span>
+            Наш<span className="text-[color:var(--accent)]">Фит</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-1 rounded-2xl border border-[color:var(--stroke)] bg-[color:var(--panel)] p-1.5" aria-label="Primary navigation">
@@ -104,6 +110,17 @@ export default function Navbar() {
                 {it.label}
               </Link>
             ))}
+            {isTrainer && (
+              <Link
+                href="/trainer/profile"
+                className={cn(
+                  "rounded-xl border border-[color:var(--accent)]/30 bg-[color:var(--accent)]/10 px-4 py-3 text-[color:var(--accent)] font-medium",
+                  isActive("/trainer/profile") && "bg-[color:var(--accent)]/20"
+                )}
+              >
+                Профиль тренера
+              </Link>
+            )}
           </div>
         </div>
       </div>

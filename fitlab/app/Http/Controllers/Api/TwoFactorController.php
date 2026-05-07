@@ -132,7 +132,7 @@ class TwoFactorController extends Controller
 
         // Проверка 2FA кода
         if ($user->verifyTwoFactorCode($request->code)) {
-            $token = $user->createToken('fitlab-spa')->plainTextToken;
+            $token = $user->createToken('nashfit-spa')->plainTextToken;
 
             return response()->json([
                 'user' => $user,
@@ -142,7 +142,7 @@ class TwoFactorController extends Controller
 
         // Проверка кода восстановления
         if ($user->verifyRecoveryCode($request->code)) {
-            $token = $user->createToken('fitlab-spa')->plainTextToken;
+            $token = $user->createToken('nashfit-spa')->plainTextToken;
 
             return response()->json([
                 'user' => $user,

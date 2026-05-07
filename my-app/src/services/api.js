@@ -1,7 +1,7 @@
 // src/services/api.js
 
-const TOKEN_KEY = "fitlab_token";
-const USER_KEY = "fitlab_user";
+const TOKEN_KEY = "nashfit_token";
+const USER_KEY = "nashfit_user";
 
 function isServer() {
   return typeof window === "undefined";

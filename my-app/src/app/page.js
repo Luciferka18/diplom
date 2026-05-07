@@ -4,13 +4,47 @@ import Section from "@/components/ui/Section";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
+import { apiGet } from "@/services/api";
 
-const stats = [
-  { icon: "🧑‍🏫", value: "12", label: "Тренеров" },
-  { icon: "📋", value: "25", label: "Программ" },
-  { icon: "🛍️", value: "80+", label: "Товаров" },
-  { icon: "⭐", value: "4.9", label: "Средний рейтинг" },
-];
+async function fetchStats() {
+  const defaults = { trainers: 0, programs: 0, products: 0, avgRating: 0, reviewsCount: 0 };
+
+  try {
+    const [trainers, programs, products, reviews] = await Promise.allSettled([
+      apiGet("/trainers"),
+      apiGet("/programs"),
+      apiGet("/products"),
+      apiGet("/reviews"),
+    ]);
+
+    const trainersArr = trainers.status === "fulfilled" && Array.isArray(trainers.value) ? trainers.value : [];
+    const programsArr = programs.status === "fulfilled" && Array.isArray(programs.value) ? programs.value : [];
+    const productsArr = products.status === "fulfilled" && Array.isArray(products.value) ? products.value : [];
+    const reviewsArr = reviews.status === "fulfilled" && Array.isArray(reviews.value) ? reviews.value : [];
+
+    const totalRating = reviewsArr.reduce((sum, r) => sum + (Number(r.rating) || 0), 0);
+    const avgRating = reviewsArr.length > 0 ? (totalRating / reviewsArr.length).toFixed(1) : "0";
+
+    return {
+      trainers: trainersArr.length,
+      programs: programsArr.length,
+      products: productsArr.length,
+      avgRating,
+      reviewsCount: reviewsArr.length,
+    };
+  } catch {
+    return defaults;
+  }
+}
+
+function pluralize(count, one, few, many) {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod100 >= 11 && mod100 <= 19) return many;
+  if (mod10 === 1) return one;
+  if (mod10 >= 2 && mod10 <= 4) return few;
+  return many;
+}
 
 const howItWorks = [
   { icon: "1️⃣", title: "Выбери цель", text: "Определи формат: набор массы, сушка или поддержка формы." },
@@ -33,12 +67,25 @@ const quickLinks = [
   { href: "/booking", title: "Запись на тренировку", text: "Бронирование занятий и управление расписанием.", cta: "Записаться", icon: "🗓️", span: "md:col-span-4" },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const stats = await fetchStats();
+
+  const trainersLabel = pluralize(stats.trainers, "Тренер", "Тренера", "Тренеров");
+  const programsLabel = pluralize(stats.programs, "Программа", "Программы", "Программ");
+  const productsLabel = pluralize(stats.products, "Товар", "Товара", "Товаров");
+
+  const statsCards = [
+    { icon: "🧑‍🏫", value: stats.trainers, label: trainersLabel },
+    { icon: "📋", value: stats.programs, label: programsLabel },
+    { icon: "🛍️", value: stats.products, label: productsLabel },
+    { icon: "⭐", value: stats.avgRating, label: stats.reviewsCount > 0 ? `Средний рейтинг (${stats.reviewsCount} ${pluralize(stats.reviewsCount, "отзыв", "отзыва", "отзывов")})` : "Средний рейтинг" },
+  ];
+
   return (
     <>
       <Section className="pt-12 md:pt-16 pb-8 md:pb-10">
         <div className="mx-auto max-w-5xl text-center">
-          <Badge className="mb-4">Новая энергия NashFit</Badge>
+          <Badge className="mb-4">Новая энергия НашФит</Badge>
           <h1 className="text-5xl md:text-6xl font-black leading-tight text-[color:var(--text)]">
             Единая fitness-платформа для тренировок, питания и прогресса
           </h1>
@@ -52,7 +99,7 @@ export default function HomePage() {
           </div>
 
           <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-            {stats.map((s) => (
+            {statsCards.map((s) => (
               <Card key={s.label} className="p-4 md:p-5 text-left" hover={false}>
                 <div className="text-xl">{s.icon}</div>
                 <div className="mt-2 text-2xl font-bold text-[color:var(--text)]">{s.value}</div>
@@ -75,7 +122,7 @@ export default function HomePage() {
         </div>
       </Section>
 
-      <Section title="Почему NashFit" subtitle="Собрали всё нужное для уверенного и комфортного прогресса." className="py-8 md:py-10">
+      <Section title="Почему НашФит" subtitle="Собрали всё нужное для уверенного и комфортного прогресса." className="py-8 md:py-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
           {benefits.map((b) => (
             <Card key={b.title} className="h-full">
@@ -87,7 +134,7 @@ export default function HomePage() {
         </div>
       </Section>
 
-      <Section title="Разделы платформы" subtitle="Быстрый переход к ключевым возможностям NashFit." className="py-8 md:py-10">
+      <Section title="Разделы платформы" subtitle="Быстрый переход к ключевым возможностям НашФит." className="py-8 md:py-10">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-5 md:gap-6">
           {quickLinks.map((item) => (
             <Card

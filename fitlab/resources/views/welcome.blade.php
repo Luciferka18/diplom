@@ -3,13 +3,13 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>FitLab Gym</title>
+    <title>НашФит Gym</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
     <header class="topbar">
         <div class="container topbar__inner">
-            <div class="brand">FitLab</div>
+            <div class="brand">НашФит</div>
             <nav class="nav">
                 <a href="#programs">Программы</a>
                 <a href="#trainers">Тренеры</a>
@@ -36,7 +36,7 @@
                     </div>
                 </div>
                 <div class="card hero__card">
-                    <h3>Почему FitLab</h3>
+                    <h3>Почему НашФит</h3>
                     <ul>
                         <li>✔ Программы под цель: похудение, набор массы, рельеф</li>
                         <li>✔ Поддержка тренера и контроль прогресса</li>
@@ -103,12 +103,12 @@
     <footer id="contacts" class="footer">
         <div class="container footer__inner">
             <div>
-                <h3>FitLab Gym</h3>
+                <h3>НашФит Gym</h3>
                 <p>Москва, ул. Спортивная, 10</p>
             </div>
             <div>
                 <p>+7 (999) 000-00-00</p>
-                <p>fitlab@example.com</p>
+                <p>nashfit@example.com</p>
             </div>
         </div>
     </footer>

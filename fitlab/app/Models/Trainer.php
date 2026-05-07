@@ -9,7 +9,7 @@ class Trainer extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'specialization', 'experience_years', 'bio', 'photo_url', 'instagram', 'user_id'];
+    protected $fillable = ['name', 'specialization', 'experience_years', 'age', 'bio', 'photo_url', 'instagram', 'phone', 'user_id'];
 
     public function user()
     {
@@ -24,5 +24,10 @@ class Trainer extends Model
     public function tags()
     {
         return $this->morphToMany(Tag::class, 'taggable');
+    }
+
+    public function schedules()
+    {
+        return $this->hasMany(TrainerSchedule::class);
     }
 }

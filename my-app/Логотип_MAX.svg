@@ -1,0 +1,123 @@
+<?php
+/**
+ * Theme: Vita Theme
+ * 
+ * The "sidebar" for the bottom of the page (before the widgetized footer area). If no 
+ * widgets added AND preivewing the theme, then display some widgets as samples. Once the
+ * theme is actually in use, it will be empty until the user adds some actual widgets.
+ *
+ * @package Vita theme
+ */
+?>
+
+<?php if( !is_page( 79 ) ) : ?>
+	<div id="sidebar-pagebottom" class="sidebar-pagebottom">
+	
+		<aside id="sample-text" class="widget widget_text bg-lightgreen text-center boxoopb clearfix ">
+		<div class="container" id="sidebar-pagebottom-box">
+		<div class="row" id="sidebar-pagebottom-row">
+
+		<div class="col-xs-12 col-sm-12 col-md-3" id="spbl">
+		<div class="row" id="spbl-box">
+		
+		<div class="col-xs-12 col-sm-12 col-md-5" id="spbl-blue">
+		&nbsp;
+		</div> 
+		
+		<div class="col-xs-12 col-sm-12 col-md-5" id="spbl-img">
+		<img src="<?php echo get_template_directory_uri(); ?>/img/call-us-now.png" alt="позвоните нам сейчас" />
+		</div>
+		
+		</div><!-- /spbl-row -->
+		</div><!-- /spbl -->		
+		
+		<div class="col-xs-12 col-sm-12 col-md-7" id="wrb">
+		
+		<div class="row" id="wrb-box">
+		
+		<div class="col-xs-12 col-sm-12 col-md-12" id="wrb-h">
+		<p>ЭКСТРЕННАЯ БЛОКАДА ЗАВИСИМОСТИ</p>
+		<span>КРУГЛОСУТОЧНО / АНОНИМНО / БЕСПЛАТНО</span>
+		</div><!-- widget-title -->
+		
+		<div class="col-xs-12 col-sm-12 col-md-12" id="wrb-cun">
+		<div class="wrb-cunb"><span class="highlight">ЗВОНИТЕ СЕЙЧАС!</span><span class="phone"><a href="tel:+79656037341" data-rel="external">89656037341</a></span></div>
+		</div>
+		
+		<div class="col-xs-12 col-sm-12 col-md-12" id="wrb-bu">
+		<div class="row" id="wrb-bu-box">
+		<div class="col-xs-12 col-sm-12 col-md-6" id="wrb-bu-left">
+		<a href="#" class="btn btn-large btn-primary pbwidget"  data-toggle="modal" data-target="#contactform"><span class="glyphicon glyphicon-envelope"></span> ОТПРАВИТЬ ЗАЯВКУ</a>
+
+		<!-- Contact-form -->
+	
+		</div>
+<div class="col-xs-12 col-sm-12 col-md-6" id="wrb-bu-left">
+		<a href="#" class="btn btn-large btn-primary pbwidget"  data-toggle="modal" data-target="#contactform"><span class="glyphicon glyphicon-envelope"></span> ОТПРАВИТЬ ЗАЯВКУ</a>
+
+		<!-- Contact-form -->
+	
+		</div>
+
+		<div class="col-xs-12 col-sm-12 col-md-6" id="wrb-bu-right">
+		<a href="#" class="btn btn-large btn-primary pbwidget" data-toggle="modal" data-target="#contactform"><span class="glyphicon glyphicon-earphone"></span> ЗАКАЗАТЬ ЗВОНОК</a>
+		</div>
+		</div>
+		</div>
+		
+		</div>
+		</div> <!-- middle -->		
+
+		<div class="hidden-xs hidden-sm col-md-2" id="space">
+			&nbsp;
+		</div><!-- /space -->
+		
+		</div><!-- /row -->
+		</div><!-- /container -->
+		</aside>
+
+	</div><!-- .sidebar-pagebottom -->
+<?php endif; ?>
+
+<!-- Modal -->
+<div class="modal fade" id="contactform" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">x</span></button>
+				<p class="modal-title" id="myModalLabel">Форма обратной связи</p>
+			</div>
+
+			<div class="modal-body">
+				<form id="contact-form" method="post" action="javascript:void(null);">
+					<div class="row">
+						<div class="col-md-6">
+							<div class="form-group">
+								<label>Ваше имя</label>
+								<input id="contact_name" class="form-control" name="contact_name" type="text">
+							</div>
+						</div>
+						<div class="col-md-6">
+							<div class="form-group">
+								<label>Ваше телефон</label>
+								<input id="contact_phone" class="form-control" name="contact_phone" type="tel">
+							</div>
+						</div>	
+					</div>
+					<div class="row">
+						<div class="col-md-12">
+							<div class="alert alert-danger hidden contact-error"></div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-12">
+							<div class="modal-footer">
+								<button type="submit" class="btn btn-primary">Отправить</button>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>

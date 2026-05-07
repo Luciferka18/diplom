@@ -18,6 +18,10 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'is_banned',
+        'banned_until',
+        'ban_reason',
+        'banned_by',
         'two_factor_secret',
         'two_factor_recovery_codes',
         'two_factor_confirmed_at',
@@ -28,6 +32,8 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'banned_until' => 'datetime',
+        'is_banned' => 'boolean',
         'two_factor_confirmed_at' => 'datetime',
     ];
 
@@ -57,7 +63,7 @@ class User extends Authenticatable
     /**
      * Получить QR-код для 2FA
      */
-    public function getTwoFactorQrCodeUrl(string $secret, string $companyName = 'FitLab'): string
+    public function getTwoFactorQrCodeUrl(string $secret, string $companyName = 'НашФит'): string
     {
         $google2fa = new \PragmaRX\Google2FA\Google2FA();
         return $google2fa->getQRCodeUrl(
@@ -157,5 +163,67 @@ class User extends Authenticatable
     public function trainerProfile()
     {
         return $this->hasOne(Trainer::class);
+    }
+
+    /**
+     * Проверка, заблокирован ли пользователь
+     */
+    public function isBanned(): bool
+    {
+        if (!$this->is_banned) {
+            return false;
+        }
+
+        // Проверяем, истек ли срок блокировки
+        if ($this->banned_until && $this->banned_until->isPast()) {
+            $this->unban();
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Заблокировать пользователя
+     */
+    public function ban(?string $reason = null, $durationDays = null): void
+    {
+        $this->forceFill([
+            'is_banned' => true,
+            'ban_reason' => $reason,
+            'banned_until' => $durationDays ? now()->addDays($durationDays) : null,
+        ])->save();
+    }
+
+    /**
+     * Разблокировать пользователя
+     */
+    public function unban(): void
+    {
+        $this->forceFill([
+            'is_banned' => false,
+            'ban_reason' => null,
+            'banned_until' => null,
+        ])->save();
+    }
+
+    /**
+     * Получить оставшееся время блокировки
+     */
+    public function getBanRemainingDays(): ?int
+    {
+        if (!$this->banned_until) {
+            return null;
+        }
+
+        return max(0, now()->diffInDays($this->banned_until, false));
+    }
+
+    /**
+     * Админ, который заблокировал пользователя
+     */
+    public function bannedBy()
+    {
+        return $this->belongsTo(User::class, 'banned_by');
     }
 }

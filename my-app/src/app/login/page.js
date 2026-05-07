@@ -20,6 +20,7 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [banInfo, setBanInfo] = useState(null);
 
   useEffect(() => {
     const fromQuery = searchParams.get("next");
@@ -33,6 +34,7 @@ function LoginForm() {
   async function onSubmit(e) {
     e.preventDefault();
     setError("");
+    setBanInfo(null);
     setBusy(true);
 
     try {
@@ -43,16 +45,25 @@ function LoginForm() {
       if (!pwd) throw new Error("Введите пароль");
 
       const result = await login(id, pwd);
-      
+
       // Если требуется 2FA, перенаправляем на страницу 2FA
       if (result?.requires_2fa) {
         router.push(`/2fa?uid=${result.user_id}&2fa=true&next=${encodeURIComponent(nextUrl)}`);
         return;
       }
-      
+
       router.replace(nextUrl);
     } catch (err) {
-      setError(err?.message || "Ошибка входа");
+      // Проверяем, не блокировка ли это
+      if (err?.data?.is_banned) {
+        setBanInfo({
+          reason: err.data.ban_reason,
+          bannedUntil: err.data.banned_until,
+          bannedBy: err.data.banned_by,
+        });
+      } else {
+        setError(err?.message || "Ошибка входа");
+      }
     } finally {
       setBusy(false);
     }
@@ -103,6 +114,56 @@ function LoginForm() {
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
             </svg>
             {error}
+          </div>
+        )}
+
+        {/* Информация о блокировке */}
+        {banInfo && (
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4">
+            <div className="flex items-start gap-3 mb-3">
+              <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              <div>
+                <h4 className="font-semibold text-red-300 mb-2">Аккаунт заблокирован</h4>
+                
+                {banInfo.reason && (
+                  <div className="mb-3">
+                    <p className="text-xs text-red-400/80 mb-1">Причина:</p>
+                    <p className="text-sm text-red-200">{banInfo.reason}</p>
+                  </div>
+                )}
+                
+                {banInfo.bannedBy && (
+                  <div className="mb-3">
+                    <p className="text-xs text-red-400/80 mb-1">Заблокировал:</p>
+                    <p className="text-sm text-red-200">{banInfo.bannedBy}</p>
+                  </div>
+                )}
+                
+                {banInfo.bannedUntil ? (
+                  <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/30">
+                    <p className="text-xs text-red-400/80 mb-1">Блокировка до:</p>
+                    <p className="text-sm text-red-200 font-medium">
+                      {new Date(banInfo.bannedUntil).toLocaleDateString("ru-RU", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                    <p className="text-xs text-red-400/60 mt-1">
+                      Осталось дней: {Math.max(0, Math.ceil((new Date(banInfo.bannedUntil) - new Date()) / (1000 * 60 * 60 * 24)))}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/30">
+                    <p className="text-sm text-red-200 font-medium">Блокировка постоянная</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 

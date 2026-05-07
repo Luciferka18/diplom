@@ -10,14 +10,14 @@ class TrainerController extends Controller
 {
     public function index()
     {
-        $trainers = Trainer::with('user')->get();
+        $trainers = Trainer::with(['user', 'reviews.user'])->get();
 
         return TrainerResource::collection($trainers);
     }
 
     public function show($id)
     {
-        $trainer = Trainer::with('user')->find($id);
+        $trainer = Trainer::with(['user', 'reviews.user', 'schedules.location'])->find($id);
 
         if (!$trainer) {
             return response()->json([

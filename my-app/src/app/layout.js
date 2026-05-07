@@ -1,10 +1,11 @@
 import "./globals.css";
 import "./legacy-components.css";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import Providers from "./providers.js";
 
 export const metadata = {
-  title: "FitLab",
+  title: "НашФит",
   description: "Fitness platform",
 };
 
@@ -31,6 +32,7 @@ export default function RootLayout({ children }) {
           <Navbar />
           <div className="hidden bg-red-500" aria-hidden="true" />
           {children}
+          <Footer />
         </Providers>
       </body>
     </html>

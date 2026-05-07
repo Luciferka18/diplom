@@ -18,7 +18,7 @@ export default async function BlogPage() {
           <span className="badge mb-3">Блог</span>
           <h1 className="section-title">Статьи о фитнесе и питании</h1>
           <p className="section-subtitle">
-            Полезные материалы от тренеров FitLab: питание, программы тренировок,
+            Полезные материалы от тренеров НашФит: питание, программы тренировок,
             восстановление и мотивация. Отлично подходит под SEO.
           </p>
         </div>

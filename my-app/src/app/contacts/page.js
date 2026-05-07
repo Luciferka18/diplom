@@ -6,7 +6,7 @@ import { apiPost } from "../../services/api";
 export default function ContactsPage() {
   const [form, setForm] = useState({
     name: "",
-    phone_or_telegram: "",
+    phone_or_vk: "",
     goal: "",
   });
   const [status, setStatus] = useState(null);
@@ -24,7 +24,7 @@ export default function ContactsPage() {
         type: "success",
         message: "Заявка отправлена! Мы свяжемся с тобой.",
       });
-      setForm({ name: "", phone_or_telegram: "", goal: "" });
+      setForm({ name: "", phone_or_vk: "", goal: "" });
     } catch {
       setStatus({
         type: "error",
@@ -40,20 +40,20 @@ export default function ContactsPage() {
           <span className="badge mb-3">Контакты</span>
           <h1 className="section-title">Наши залы и связь</h1>
           <p className="section-subtitle mb-6">
-            Приходи тренироваться в FitLab или оставь заявку — менеджер свяжется
+            Приходи тренироваться в НашФит или оставь заявку — менеджер свяжется
             с тобой и подберёт программу.
           </p>
 
           <div className="grid gap-4 mb-8 md:grid-cols-2">
             <div className="card">
-              <h2 className="font-semibold mb-1">FitLab Центр</h2>
+              <h2 className="font-semibold mb-1">НашФит Центр</h2>
               <p className="text-sm text-black/60 mb-1">
                 Ул. Спортивная, 10
               </p>
               <p className="text-xs text-black/50">Пн–Вс: 7:00–23:00</p>
             </div>
             <div className="card">
-              <h2 className="font-semibold mb-1">FitLab Север</h2>
+              <h2 className="font-semibold mb-1">НашФит Север</h2>
               <p className="text-sm text-black/60 mb-1">
                 Пр. Силы, 45
               </p>
@@ -85,13 +85,13 @@ export default function ContactsPage() {
               />
             </div>
             <div>
-              <label className="block text-xs mb-1">Телефон или Telegram</label>
+              <label className="block text-xs mb-1">Телефон или ВКонтакте</label>
               <input
                 type="text"
                 className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm outline-none focus:border-[var(--color-primary)]"
                 placeholder="+7... или @username"
-                value={form.phone_or_telegram}
-                onChange={handleChange("phone_or_telegram")}
+                value={form.phone_or_vk}
+                onChange={handleChange("phone_or_vk")}
                 required
               />
             </div>

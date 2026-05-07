@@ -13,10 +13,10 @@ class GymLocationSeeder extends Seeder
     public function run(): void
     {
         $locations = [
-            ['name' => 'FitLab Центр', 'address' => 'ул. Спортивная, 10'],
-            ['name' => 'FitLab Север', 'address' => 'пр. Ленина, 45'],
-            ['name' => 'FitLab Юг', 'address' => 'ул. Гагарина, 22'],
-            ['name' => 'FitLab Запад', 'address' => 'ул. Мира, 88'],
+            ['name' => 'НашФит Центр', 'address' => 'ул. Спортивная, 10'],
+            ['name' => 'НашФит Север', 'address' => 'пр. Ленина, 45'],
+            ['name' => 'НашФит Юг', 'address' => 'ул. Гагарина, 22'],
+            ['name' => 'НашФит Запад', 'address' => 'ул. Мира, 88'],
         ];
 
         foreach ($locations as $locationData) {

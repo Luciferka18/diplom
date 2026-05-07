@@ -26,7 +26,7 @@ class AuthController extends Controller
             'password' => Hash::make($data['password']),
         ]);
 
-        $token = $user->createToken('fitlab-spa')->plainTextToken;
+        $token = $user->createToken('nashfit-spa')->plainTextToken;
 
         return response()->json([
             'user' => new UserResource($user),
@@ -41,10 +41,24 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        $user = User::where('login', $data['login'])->first();
+        // Ищем пользователя по логину или email
+        $user = User::where('login', $data['login'])
+            ->orWhere('email', $data['login'])
+            ->first();
 
         if (!$user || !Hash::check($data['password'], $user->password)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
+        }
+
+        // Проверяем, заблокирован ли пользователь
+        if ($user->isBanned()) {
+            return response()->json([
+                'message' => 'Аккаунт заблокирован',
+                'is_banned' => true,
+                'ban_reason' => $user->ban_reason,
+                'banned_until' => $user->banned_until?->toIso8601String(),
+                'banned_by' => $user->bannedBy?->name,
+            ], 403);
         }
 
         // Если 2FA включен, возвращаем user_id для второго шага
@@ -55,7 +69,7 @@ class AuthController extends Controller
             ]);
         }
 
-        $token = $user->createToken('fitlab-spa')->plainTextToken;
+        $token = $user->createToken('nashfit-spa')->plainTextToken;
 
         return response()->json([
             'user' => new UserResource($user),

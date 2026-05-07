@@ -15,7 +15,10 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProgramController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\TrainerController;
+use App\Http\Controllers\Api\TrainerScheduleController;
+use App\Http\Controllers\Api\TrainerProfileController;
 use App\Http\Controllers\Api\TwoFactorController;
+use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\WorkoutController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,6 +27,10 @@ Route::get('/home', [HomeController::class, 'index']);
 
 Route::get('/trainers', [TrainerController::class, 'index']);
 Route::get('/trainers/{trainer}', [TrainerController::class, 'show']);
+
+// Расписание тренеров (публичный доступ)
+Route::get('/trainers/{trainerId}/schedule', [TrainerScheduleController::class, 'index']);
+Route::get('/trainers/{trainerId}/available-slots', [TrainerScheduleController::class, 'availableSlots']);
 
 Route::get('/programs', [ProgramController::class, 'index']);
 Route::get('/programs/{program}', [ProgramController::class, 'show']);
@@ -55,6 +62,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/2fa/status', [TwoFactorController::class, 'status']);
 
+    // Управление пользователями (только админ)
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/admin/users', [UserController::class, 'index']);
+        Route::get('/admin/users/stats', [UserController::class, 'stats']);
+        Route::get('/admin/users/{user}', [UserController::class, 'show']);
+        Route::post('/admin/users/{user}/ban', [UserController::class, 'ban']);
+        Route::post('/admin/users/{user}/unban', [UserController::class, 'unban']);
+        Route::delete('/admin/users/{user}', [UserController::class, 'destroy']);
+    });
+
     // 2FA routes
     Route::post('/2fa/generate', [TwoFactorController::class, 'generateSecret']);
     Route::post('/2fa/confirm', [TwoFactorController::class, 'confirmTwoFactor']);
@@ -85,6 +102,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/articles', [ArticleController::class, 'store']);
         Route::put('/articles/{article}', [ArticleController::class, 'update']);
         Route::delete('/articles/{article}', [ArticleController::class, 'destroy']);
+
+        // Профиль тренера — редактирование своей информации
+        Route::get('/trainer/profile', [TrainerProfileController::class, 'show']);
+        Route::post('/trainer/profile', [TrainerProfileController::class, 'update']);
+
+        // Расписание тренера — управление
+        Route::put('/trainer/schedule', [TrainerScheduleController::class, 'update']);
     });
 
     Route::middleware('role:admin')->group(function () {

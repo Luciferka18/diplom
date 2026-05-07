@@ -88,7 +88,7 @@ class ApiEndpointsTest extends TestCase
         $user = User::factory()->create(['role' => 'user', 'login' => 'client12', 'phone' => '+79990000112', 'email' => 'client12@example.com']);
         Sanctum::actingAs($user);
 
-        $location = GymLocation::create(['name' => 'FitLab Center', 'address' => 'Main st']);
+        $location = GymLocation::create(['name' => 'НашФит Center', 'address' => 'Main st']);
         $trainer = Trainer::create(['name' => 'Тренер', 'specialization' => 'Силовой', 'experience_years' => 5]);
 
         $payload = [

@@ -6,7 +6,7 @@ import { apiPost, apiBaseUrl } from '@/services/api';
 const initial = {
   register: { login: '', password: '', password_confirmation: '', name: '' },
   login: { login: '', password: '' },
-  contact: { name: '', phone_or_telegram: '', goal: '' },
+  contact: { name: '', phone_or_vk: '', goal: '' },
 };
 
 export default function ApiPlayground() {
@@ -73,9 +73,9 @@ export default function ApiPlayground() {
           <h3>Заявка на контакт</h3>
           <input placeholder="Имя" value={form.contact.name} onChange={(e) => update('contact', 'name', e.target.value)} />
           <input
-            placeholder="Телефон или Telegram"
-            value={form.contact.phone_or_telegram}
-            onChange={(e) => update('contact', 'phone_or_telegram', e.target.value)}
+            placeholder="Телефон или ВКонтакте"
+            value={form.contact.phone_or_vk}
+            onChange={(e) => update('contact', 'phone_or_vk', e.target.value)}
           />
           <textarea placeholder="Цель" value={form.contact.goal} onChange={(e) => update('contact', 'goal', e.target.value)} />
           <button disabled={loading} onClick={() => submit('/contacts', form.contact)}>Оставить заявку</button>

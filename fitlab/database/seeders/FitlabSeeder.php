@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Program;
 use App\Models\Tag;
 use App\Models\Trainer;
+use App\Models\TrainerSchedule;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -21,7 +22,7 @@ class FitlabSeeder extends Seeder
             'login' => 'admin01',
             'name' => 'Иван Админ',
             'phone' => '+79990000001',
-            'email' => 'admin@fitlab.local',
+            'email' => 'admin@nashfit.local',
             'role' => 'admin',
             'password' => Hash::make('password123'),
         ]);
@@ -30,7 +31,7 @@ class FitlabSeeder extends Seeder
             'login' => 'trainer01',
             'name' => 'Анна Тренер',
             'phone' => '+79990000002',
-            'email' => 'trainer@fitlab.local',
+            'email' => 'trainer@nashfit.local',
             'role' => 'trainer',
             'password' => Hash::make('password123'),
         ]);
@@ -39,7 +40,7 @@ class FitlabSeeder extends Seeder
             'login' => 'client01',
             'name' => 'Пётр Клиент',
             'phone' => '+79990000003',
-            'email' => 'user@fitlab.local',
+            'email' => 'user@nashfit.local',
             'role' => 'user',
             'password' => Hash::make('password123'),
         ]);
@@ -52,8 +53,10 @@ class FitlabSeeder extends Seeder
             'name' => 'Анна Кузнецова',
             'specialization' => 'Функциональный тренинг',
             'experience_years' => 7,
+            'age' => 28,
             'bio' => 'Помогает безопасно снизить вес и повысить выносливость.',
-            'instagram' => '@anna.fitlab',
+            'instagram' => '@anna.nashfit.vk',
+            'phone' => '+79990000002',
         ]);
 
         $program = Program::create([
@@ -85,8 +88,8 @@ class FitlabSeeder extends Seeder
         ]);
         $article->tags()->attach($tag->id);
 
-        GymLocation::create([
-            'name' => 'FitLab Центр',
+        $location = GymLocation::firstOrCreate([
+            'name' => 'НашФит Центр',
             'address' => 'ул. Спортивная, 10',
         ]);
 
@@ -94,6 +97,32 @@ class FitlabSeeder extends Seeder
             'user_id' => $user->id,
             'rating' => 5,
             'text' => 'Отличный тренер, очень понятные объяснения.',
+        ]);
+
+        // Расписание тренера по умолчанию
+        TrainerSchedule::create([
+            'trainer_id' => $trainer->id,
+            'location_id' => $location->id,
+            'day_of_week' => 1, // Понедельник
+            'start_time' => '09:00',
+            'end_time' => '18:00',
+            'slot_duration_minutes' => 60,
+        ]);
+        TrainerSchedule::create([
+            'trainer_id' => $trainer->id,
+            'location_id' => $location->id,
+            'day_of_week' => 3, // Среда
+            'start_time' => '09:00',
+            'end_time' => '18:00',
+            'slot_duration_minutes' => 60,
+        ]);
+        TrainerSchedule::create([
+            'trainer_id' => $trainer->id,
+            'location_id' => $location->id,
+            'day_of_week' => 5, // Пятница
+            'start_time' => '09:00',
+            'end_time' => '18:00',
+            'slot_duration_minutes' => 60,
         ]);
 
         $admin->tokens()->delete();

@@ -3,8 +3,8 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { apiPost, apiGet } from "@/services/api";
 
-const STORAGE_KEY = "fitlab_user";
-const TOKEN_KEY = "fitlab_token";
+const STORAGE_KEY = "nashfit_user";
+const TOKEN_KEY = "nashfit_token";
 
 const defaultAuthState = {
   user: null,

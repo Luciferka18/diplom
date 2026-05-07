@@ -153,7 +153,7 @@ export default function RegisterPage() {
             <UserPlus className="w-8 h-8 text-emerald-400" />
           </div>
           <h1 className="text-3xl font-bold text-white">Создание аккаунта</h1>
-          <p className="text-[color:var(--muted)] mt-2">Присоединяйтесь к FitLab</p>
+          <p className="text-[color:var(--muted)] mt-2">Присоединяйтесь к НашФит</p>
         </div>
 
         {/* Индикатор прогресса */}

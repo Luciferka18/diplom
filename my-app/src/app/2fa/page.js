@@ -52,9 +52,9 @@ function TwoFactorForm() {
       });
 
       if (data.token) {
-        localStorage.setItem("fitlab_token", data.token);
+        localStorage.setItem("nashfit_token", data.token);
         if (data.user) {
-          localStorage.setItem("fitlab_user", JSON.stringify(data.user));
+          localStorage.setItem("nashfit_user", JSON.stringify(data.user));
         }
         
         setSuccess("Вход выполнен! Перенаправление...");
@@ -160,7 +160,7 @@ function TwoFactorForm() {
         <div className="mt-6 p-4 rounded-xl bg-[color:var(--panel)] border border-[color:var(--stroke)]">
           <p className="text-xs text-[color:var(--muted)] text-center">
             Откройте приложение Google Authenticator, Authy или другое совместимое приложение
-            и введите 6-значный код для вашего аккаунта FitLab
+            и введите 6-значный код для вашего аккаунта НашФит
           </p>
         </div>
       )}

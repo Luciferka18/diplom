@@ -162,7 +162,7 @@ export default function AccountReviewsPage() {
               value={text}
               onChange={(e) => setText(e.target.value)}
               className="w-full rounded-xl border border-[color:var(--stroke)] bg-[color:var(--panel)] px-3 py-2.5 text-[color:var(--text)] placeholder:text-[color:var(--muted2)] focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)] focus:border-[color:var(--accent)] min-h-[120px] resize-y"
-              placeholder="Расскажите о своём опыте работы с FitLab..."
+              placeholder="Расскажите о своём опыте работы с НашФит..."
               disabled={submitting}
             />
             <p className="text-xs text-[color:var(--muted)] mt-1">
@@ -216,7 +216,7 @@ export default function AccountReviewsPage() {
               Пока нет отзывов
             </h3>
             <p className="text-[color:var(--muted)]">
-              Будьте первым, кто оставит отзыв о FitLab
+              Будьте первым, кто оставит отзыв о НашФит
             </p>
           </Card>
         )}

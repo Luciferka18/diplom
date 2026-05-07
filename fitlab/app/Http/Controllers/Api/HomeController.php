@@ -18,7 +18,7 @@ class HomeController extends Controller
     {
         return response()->json([
             'gym' => [
-                'name' => 'FitLab',
+                'name' => 'НашФит',
                 'description' => 'Фитнес-клуб и digital-платформа с персональными программами.',
             ],
             'trainers' => TrainerResource::collection(Trainer::latest()->limit(3)->get()),
