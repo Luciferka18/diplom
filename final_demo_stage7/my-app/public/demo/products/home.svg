@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
-<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#059669"/><stop offset="1" stop-color="#064e3b"/></linearGradient><filter id="b"><feGaussianBlur stdDeviation="50"/></filter></defs>
-<rect width="1200" height="800" rx="48" fill="#0b1423"/><circle cx="950" cy="120" r="250" fill="#059669" opacity=".25" filter="url(#b)"/><circle cx="220" cy="700" r="270" fill="#064e3b" opacity=".2" filter="url(#b)"/>
-<rect x="54" y="54" width="1092" height="692" rx="40" fill="url(#g)" opacity=".88"/>
-<circle cx="160" cy="150" r="58" fill="#07111f" opacity=".72"/><text x="160" y="171" text-anchor="middle" font-family="Arial" font-weight="700" font-size="58" fill="#2ee6ae">H</text>
-<text x="95" y="520" font-family="Arial" font-size="64" font-weight="800" fill="#fff">Домашний фитнес</text>
-<text x="98" y="585" font-family="Arial" font-size="28" fill="#d7e7f4">Тренируйтесь там, где удобно</text>
-<text x="98" y="675" font-family="Arial" font-size="24" letter-spacing="8" fill="#2ee6ae">НАШФИТ</text>
-</svg>
