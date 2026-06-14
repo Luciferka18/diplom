@@ -7,10 +7,12 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use App\Services\TrialMembershipService;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
+    public function register(Request $request, TrialMembershipService $trialService)
     {
         $data = $request->validate([
             'login' => ['required', 'string', 'min:6', 'alpha_num', 'unique:users,login'],
@@ -26,6 +28,8 @@ class AuthController extends Controller
             'password' => Hash::make($data['password']),
         ]);
 
+        $trialService->ensureForUser($user);
+
         $token = $user->createToken('nashfit-spa')->plainTextToken;
 
         return response()->json([
@@ -34,7 +38,7 @@ class AuthController extends Controller
         ], 201);
     }
 
-    public function login(Request $request)
+    public function login(Request $request, TrialMembershipService $trialService)
     {
         $data = $request->validate([
             'login' => ['required', 'string'],
@@ -69,6 +73,8 @@ class AuthController extends Controller
             ]);
         }
 
+        $trialService->ensureForUser($user);
+
         $token = $user->createToken('nashfit-spa')->plainTextToken;
 
         return response()->json([
@@ -78,11 +84,30 @@ class AuthController extends Controller
         ]);
     }
 
-    public function me(Request $request)
+    public function me(Request $request, TrialMembershipService $trialService)
     {
+        $trialService->ensureForUser($request->user());
         return response()->json(['user' => new UserResource($request->user())]);
     }
 
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'login' => ['required', 'string', 'min:6', 'alpha_num', Rule::unique('users', 'login')->ignore($user->id)],
+            'name' => ['required', 'string', 'max:255', 'regex:/^[А-Яа-яЁё\s-]+$/u'],
+            'phone' => ['required', 'string', 'regex:/^\+7\d{10}$/', Rule::unique('users', 'phone')->ignore($user->id)],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+        ]);
+
+        $user->forceFill($data)->save();
+
+        return response()->json([
+            'message' => 'Профиль обновлён.',
+            'user' => new UserResource($user->fresh()),
+        ]);
+    }
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()?->delete();

@@ -109,7 +109,7 @@ function LoginForm() {
 
         {/* Ошибка */}
         {error && (
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300 flex items-start gap-2">
+          <div className="rounded-xl border border-[color:color-mix(in_srgb,var(--danger)_40%,var(--stroke))] bg-[color:var(--danger-soft)] p-3 text-sm text-[color:var(--danger)] flex items-start gap-2">
             <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
             </svg>
@@ -119,32 +119,32 @@ function LoginForm() {
 
         {/* Информация о блокировке */}
         {banInfo && (
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4">
+          <div className="rounded-xl border border-[color:color-mix(in_srgb,var(--danger)_40%,var(--stroke))] bg-[color:var(--danger-soft)] p-4">
             <div className="flex items-start gap-3 mb-3">
-              <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-5 h-5 text-[color:var(--danger)] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
               <div>
-                <h4 className="font-semibold text-red-300 mb-2">Аккаунт заблокирован</h4>
+                <h4 className="font-semibold text-[color:var(--danger)] mb-2">Аккаунт заблокирован</h4>
                 
                 {banInfo.reason && (
                   <div className="mb-3">
-                    <p className="text-xs text-red-400/80 mb-1">Причина:</p>
-                    <p className="text-sm text-red-200">{banInfo.reason}</p>
+                    <p className="text-xs text-[color:var(--danger)]/80 mb-1">Причина:</p>
+                    <p className="text-sm text-[color:var(--danger)]">{banInfo.reason}</p>
                   </div>
                 )}
                 
                 {banInfo.bannedBy && (
                   <div className="mb-3">
-                    <p className="text-xs text-red-400/80 mb-1">Заблокировал:</p>
-                    <p className="text-sm text-red-200">{banInfo.bannedBy}</p>
+                    <p className="text-xs text-[color:var(--danger)]/80 mb-1">Заблокировал:</p>
+                    <p className="text-sm text-[color:var(--danger)]">{banInfo.bannedBy}</p>
                   </div>
                 )}
                 
                 {banInfo.bannedUntil ? (
-                  <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/30">
-                    <p className="text-xs text-red-400/80 mb-1">Блокировка до:</p>
-                    <p className="text-sm text-red-200 font-medium">
+                  <div className="p-3 rounded-lg bg-[color:var(--danger-soft)] border border-[color:color-mix(in_srgb,var(--danger)_40%,var(--stroke))]">
+                    <p className="text-xs text-[color:var(--danger)]/80 mb-1">Блокировка до:</p>
+                    <p className="text-sm text-[color:var(--danger)] font-medium">
                       {new Date(banInfo.bannedUntil).toLocaleDateString("ru-RU", {
                         year: "numeric",
                         month: "long",
@@ -153,13 +153,13 @@ function LoginForm() {
                         minute: "2-digit",
                       })}
                     </p>
-                    <p className="text-xs text-red-400/60 mt-1">
+                    <p className="text-xs text-[color:var(--danger)]/60 mt-1">
                       Осталось дней: {Math.max(0, Math.ceil((new Date(banInfo.bannedUntil) - new Date()) / (1000 * 60 * 60 * 24)))}
                     </p>
                   </div>
                 ) : (
-                  <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/30">
-                    <p className="text-sm text-red-200 font-medium">Блокировка постоянная</p>
+                  <div className="p-3 rounded-lg bg-[color:var(--danger-soft)] border border-[color:color-mix(in_srgb,var(--danger)_40%,var(--stroke))]">
+                    <p className="text-sm text-[color:var(--danger)] font-medium">Блокировка постоянная</p>
                   </div>
                 )}
               </div>
@@ -186,7 +186,7 @@ function LoginForm() {
         <div className="text-center">
           <a
             href="/forgot-password"
-            className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
+            className="text-sm text-[color:var(--accent)] hover:text-[color:var(--accent-hover)] transition-colors"
           >
             Забыли пароль?
           </a>
@@ -195,7 +195,7 @@ function LoginForm() {
         {/* Ссылка на регистрацию */}
         <p className="text-center text-sm text-[color:var(--muted)]">
           Нет аккаунта?{" "}
-          <a href="/register" className="text-emerald-400 font-semibold hover:text-emerald-300 transition-colors">
+          <a href="/register" className="text-[color:var(--accent)] font-semibold hover:text-[color:var(--accent-hover)] transition-colors">
             Зарегистрироваться
           </a>
         </p>
@@ -206,21 +206,21 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Container size="narrow" className="py-12 min-h-[80vh] flex items-center">
+    <Container size="narrow" className="py-10 sm:py-14 min-h-[76vh] flex items-center">
       <div className="w-full max-w-md mx-auto">
         {/* Заголовок с иконкой */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 mb-4">
-            <LogIn className="w-8 h-8 text-emerald-400" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[color:var(--accent-soft)] border border-[color:var(--accent-border)] mb-4">
+            <LogIn className="w-8 h-8 text-[color:var(--accent)]" />
           </div>
-          <h1 className="text-3xl font-bold text-white">С возвращением!</h1>
+          <h1 className="text-3xl font-black tracking-[-0.045em] text-[color:var(--text)]">С возвращением!</h1>
           <p className="text-[color:var(--muted)] mt-2">Войдите в свой аккаунт</p>
         </div>
 
         <Suspense fallback={
           <Card className="w-full p-6 md:p-8" hover={false}>
             <div className="flex items-center justify-center py-8">
-              <svg className="animate-spin h-6 w-6 text-emerald-400" viewBox="0 0 24 24">
+              <svg className="animate-spin h-6 w-6 text-[color:var(--accent)]" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>

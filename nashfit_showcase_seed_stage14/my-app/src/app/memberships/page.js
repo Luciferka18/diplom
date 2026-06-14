@@ -1,0 +1,172 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { apiGet, apiPost } from "@/services/api";
+import { useAuth } from "@/context/AuthContext";
+import MockPaymentPanel from "@/components/payments/MockPaymentPanel";
+import { Check, Sparkles, TicketPercent, CalendarRange, ShieldCheck, ArrowRight, Gift, X } from "lucide-react";
+
+const money = (kopecks = 0) => new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 }).format(Number(kopecks || 0) / 100);
+
+const MEMBERSHIP_ORDER = ["trial-3-visits", "1-month", "3-months", "6-months", "12-months", "24-months"];
+const MEMBERSHIP_LABELS = {
+  "trial-3-visits": "3 бесплатных посещения",
+  "1-month": "1 месяц",
+  "3-months": "3 месяца",
+  "6-months": "6 месяцев",
+  "12-months": "1 год",
+  "24-months": "2 года",
+};
+
+function planKey(plan) {
+  if (plan?.slug) return plan.slug;
+  if (plan?.is_trial || Number(plan?.trial_visits || 0) === 3) return "trial-3-visits";
+  const months = Number(plan?.duration_months || 0);
+  if ([1, 3, 6, 12, 24].includes(months)) return `${months}-month${months === 1 ? "" : "s"}`;
+  return "";
+}
+
+function normalizePlan(plan) {
+  const key = planKey(plan);
+  return { ...plan, _displayKey: key, name: MEMBERSHIP_LABELS[key] || plan.name };
+}
+
+export default function MembershipsPage() {
+  const { isAuthed } = useAuth();
+  const [plans, setPlans] = useState([]);
+  const [promotions, setPromotions] = useState([]);
+  const [owned, setOwned] = useState([]);
+  const [promo, setPromo] = useState("FIT12");
+  const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState(null);
+  const [payment, setPayment] = useState(null);
+  const [selectedPurchase, setSelectedPurchase] = useState(null);
+  const [error, setError] = useState("");
+
+  async function load() {
+    setLoading(true);
+    try {
+      const [plansRes, promoRes, accountRes] = await Promise.all([
+        apiGet("/memberships"), apiGet("/promotions"), isAuthed ? apiGet("/account/memberships") : Promise.resolve({ data: [] }),
+      ]);
+      const allowedPlans = (plansRes?.data || [])
+        .map(normalizePlan)
+        .filter((plan) => MEMBERSHIP_ORDER.includes(plan._displayKey))
+        .sort((a, b) => MEMBERSHIP_ORDER.indexOf(a._displayKey) - MEMBERSHIP_ORDER.indexOf(b._displayKey));
+      setPlans(allowedPlans);
+      setPromotions(promoRes?.data || []);
+      setOwned(accountRes?.data || []);
+    } catch (e) {
+      setError(e?.message || "Не удалось загрузить абонементы.");
+    } finally { setLoading(false); }
+  }
+
+  useEffect(() => { load(); }, [isAuthed]);
+
+  const activePlanIds = useMemo(() => new Set(owned.filter((x) => ["active", "pending"].includes(x.status)).map((x) => x.membership?.id)), [owned]);
+
+  async function purchase(plan) {
+    if (!isAuthed) return;
+    setBusyId(plan.id); setError("");
+    try {
+      const response = await apiPost(`/memberships/${plan.id}/purchase`, { promo_code: promo.trim() || null });
+      const item = response?.data;
+      setSelectedPurchase(item);
+      if (item?.payment?.status === "pending") setPayment(item.payment);
+      else await load();
+    } catch (e) {
+      setError(e?.data?.message || e?.message || "Не удалось создать покупку.");
+    } finally { setBusyId(null); }
+  }
+
+  return (
+    <main className="min-h-screen bg-[color:var(--bg)] py-12">
+      <div className="container-fitlab">
+        <section className="relative overflow-hidden rounded-[2rem] border border-[color:var(--stroke)] bg-[color:var(--panel)] px-6 py-12 md:px-12 md:py-16 dark:border-emerald-400/20 dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-emerald-950/60">
+          <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-emerald-400/10 blur-3xl dark:bg-emerald-400/15" />
+          <div className="relative max-w-3xl">
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-700 dark:border-emerald-400/25 dark:bg-emerald-400/10 dark:text-emerald-300"><Sparkles className="h-4 w-4" /> Абонементы НашФит</span>
+            <h1 className="mt-5 text-4xl font-black leading-tight text-[color:var(--text)] md:text-6xl dark:text-white">Зал для результата, а не для обещаний</h1>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-[color:var(--muted)] md:text-lg dark:text-white/65">Выберите срок, который подходит вашему темпу. Бесплатные программы и прогресс остаются доступны всем — абонемент открывает путь в офлайн-зал.</p>
+            <div className="mt-7 flex flex-wrap gap-3 text-sm text-[color:var(--muted)] dark:text-white/70">
+              <span className="rounded-xl border border-[color:var(--stroke)] bg-[color:var(--bg)] px-4 py-2 dark:border-white/10 dark:bg-white/5">3 бесплатных посещения</span>
+              <span className="rounded-xl border border-[color:var(--stroke)] bg-[color:var(--bg)] px-4 py-2 dark:border-white/10 dark:bg-white/5">1 / 3 / 6 месяцев · 1 / 2 года</span>
+              <span className="rounded-xl border border-[color:var(--stroke)] bg-[color:var(--bg)] px-4 py-2 dark:border-white/10 dark:bg-white/5">Промокод FIT12</span>
+            </div>
+          </div>
+        </section>
+
+        {promotions.length ? (
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            {promotions.slice(0, 2).map((item) => (
+              <div key={item.id} className="rounded-2xl border border-cyan-400/20 bg-cyan-400/10 p-5">
+                <div className="flex items-center gap-2 text-sm font-bold text-cyan-700 dark:text-cyan-200"><TicketPercent className="h-5 w-5" /> {item.badge || "Акция"}</div>
+                <div className="mt-2 text-xl font-bold text-[color:var(--text)] dark:text-white">{item.banner_title || item.name}</div>
+                <p className="mt-1 text-sm text-[color:var(--muted)] dark:text-white/60">{item.banner_text || item.description}</p>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        <div className="mt-10 flex flex-col gap-4 rounded-2xl border border-[color:var(--stroke)] bg-[color:var(--panel)] p-5 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="font-bold text-[color:var(--text)]">Есть промокод?</div>
+            <p className="text-sm text-[color:var(--muted)]">Он будет применён к выбранному абонементу.</p>
+          </div>
+          <div className="flex w-full max-w-md gap-2">
+            <input value={promo} onChange={(e) => setPromo(e.target.value.toUpperCase())} placeholder="FIT12" className="min-w-0 flex-1 rounded-xl border border-[color:var(--stroke)] bg-[color:var(--bg)] px-4 py-3 font-semibold uppercase text-[color:var(--text)] outline-none focus:border-emerald-400" />
+            {promo ? <button onClick={() => setPromo("")} className="rounded-xl border border-[color:var(--stroke)] px-3 text-[color:var(--muted)]"><X className="h-5 w-5" /></button> : null}
+          </div>
+        </div>
+
+        {error ? <div className="mt-5 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-red-700 dark:text-red-200">{error}</div> : null}
+
+        <section className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {loading ? Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-96 animate-pulse rounded-3xl border border-[color:var(--stroke)] bg-[color:var(--panel)]" />) : plans.map((plan) => {
+            const ownedPlan = activePlanIds.has(plan.id);
+            return (
+              <article key={plan.id} className={`relative flex min-h-[420px] flex-col overflow-hidden rounded-3xl border p-6 ${plan.is_featured ? "border-emerald-400/50 bg-gradient-to-b from-emerald-400/15 to-[color:var(--panel)] shadow-xl shadow-emerald-950/20" : "border-[color:var(--stroke)] bg-[color:var(--panel)]"}`}>
+                {plan.badge ? <span className="mb-5 w-fit rounded-full bg-emerald-400 px-3 py-1 text-xs font-black uppercase tracking-wider text-slate-950">{plan.badge}</span> : null}
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-2xl font-black text-[color:var(--text)]">{plan.name}</h2>
+                    <div className="mt-2 flex items-center gap-2 text-sm text-[color:var(--muted)]"><CalendarRange className="h-4 w-4" /> {plan.is_trial ? `${plan.trial_visits} посещения в течение 30 дней` : Number(plan.duration_months) === 12 ? "1 год" : Number(plan.duration_months) === 24 ? "2 года" : `${plan.duration_months} мес.`}</div>
+                  </div>
+                  {plan.is_trial ? <Gift className="h-8 w-8 text-emerald-400" /> : <ShieldCheck className="h-8 w-8 text-emerald-400" />}
+                </div>
+                <p className="mt-4 min-h-12 text-sm leading-6 text-[color:var(--muted)]">{plan.description}</p>
+                <div className="mt-6">
+                  <div className="flex items-end gap-2">
+                    <span className="text-3xl font-black text-[color:var(--text)]">{plan.price ? money(plan.price) : "Бесплатно"}</span>
+                    {plan.old_price ? <span className="pb-1 text-sm text-[color:var(--muted)] line-through">{money(plan.old_price)}</span> : null}
+                  </div>
+                </div>
+                <ul className="mt-6 flex-1 space-y-3">
+                  {(plan.features || []).map((feature) => <li key={feature} className="flex gap-3 text-sm text-[color:var(--text)]"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" /> {feature}</li>)}
+                </ul>
+                {plan.is_trial ? (
+                  <div className="mt-6 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-center text-sm font-semibold text-emerald-700 dark:text-emerald-300">Выдаётся автоматически после регистрации</div>
+                ) : isAuthed ? (
+                  <button disabled={busyId === plan.id || ownedPlan} onClick={() => purchase(plan)} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-5 py-3 font-bold text-slate-950 hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60">
+                    {ownedPlan ? "Уже оформлен" : busyId === plan.id ? "Создаём счёт…" : <>Выбрать тариф <ArrowRight className="h-5 w-5" /></>}
+                  </button>
+                ) : <Link href="/login?next=/memberships" className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-5 py-3 font-bold text-slate-950">Войти и выбрать <ArrowRight className="h-5 w-5" /></Link>}
+              </article>
+            );
+          })}
+        </section>
+      </div>
+
+      {payment ? (
+        <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/75 p-4 backdrop-blur-sm">
+          <div className="mx-auto flex min-h-full max-w-2xl items-center py-8">
+            <div className="w-full">
+              <MockPaymentPanel payment={payment} title={`Абонемент «${selectedPurchase?.membership?.name || "НашФит"}»`} onCancel={() => setPayment(null)} onSuccess={async () => { setPayment(null); await load(); }} />
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </main>
+  );
+}

@@ -1,0 +1,38 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Trainer extends Model
+{
+    use HasFactory;
+
+    protected $fillable = ['name', 'specialization', 'experience_years', 'age', 'bio', 'photo_url', 'instagram', 'phone', 'user_id'];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function reviews()
+    {
+        return $this->morphMany(Review::class, 'reviewable')->latest();
+    }
+
+    public function tags()
+    {
+        return $this->morphToMany(Tag::class, 'taggable');
+    }
+
+    public function services()
+    {
+        return $this->hasMany(TrainerService::class);
+    }
+
+    public function schedules()
+    {
+        return $this->hasMany(TrainerSchedule::class);
+    }
+}

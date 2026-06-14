@@ -103,14 +103,14 @@ function TwoFactorForm() {
         </div>
 
         {error && (
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300 flex items-start gap-2">
+          <div className="rounded-xl border border-[color:color-mix(in_srgb,var(--danger)_40%,var(--stroke))] bg-[color:var(--danger-soft)] p-3 text-sm text-[color:var(--danger)] flex items-start gap-2">
             <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
             {error}
           </div>
         )}
 
         {success && (
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-300 flex items-center gap-2">
+          <div className="rounded-xl border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] p-3 text-sm text-[color:var(--accent)] flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
             {success}
           </div>
@@ -138,7 +138,7 @@ function TwoFactorForm() {
               setCode("");
               setError("");
             }}
-            className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
+            className="text-sm text-[color:var(--accent)] hover:text-[color:var(--accent-hover)] transition-colors"
           >
             {useRecovery 
               ? "Использовать код из приложения" 
@@ -166,8 +166,8 @@ function TwoFactorForm() {
       )}
 
       {useRecovery && (
-        <div className="mt-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
-          <p className="text-xs text-amber-300 text-center">
+        <div className="mt-6 p-4 rounded-xl bg-[color:var(--warning-soft)] border border-[color:color-mix(in_srgb,var(--warning)_40%,var(--stroke))]">
+          <p className="text-xs text-[color:var(--warning)] text-center">
             Введите один из кодов восстановления, которые вы сохранили при настройке 2FA.
             Каждый код можно использовать только один раз.
           </p>
@@ -179,13 +179,13 @@ function TwoFactorForm() {
 
 export default function TwoFactorPage() {
   return (
-    <Container size="narrow" className="py-12 min-h-[80vh] flex items-center">
+    <Container size="narrow" className="py-10 sm:py-14 min-h-[76vh] flex items-center">
       <div className="w-full max-w-md mx-auto">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 mb-4">
-            <Shield className="w-8 h-8 text-emerald-400" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[color:var(--accent-soft)] border border-[color:var(--accent-border)] mb-4">
+            <Shield className="w-8 h-8 text-[color:var(--accent)]" />
           </div>
-          <h1 className="text-3xl font-bold text-white">Двухфакторная аутентификация</h1>
+          <h1 className="text-3xl font-black tracking-[-0.045em] text-[color:var(--text)]">Двухфакторная аутентификация</h1>
           <p className="text-[color:var(--muted)] mt-2">
             Введите код для продолжения
           </p>
@@ -194,7 +194,7 @@ export default function TwoFactorPage() {
         <Suspense fallback={
           <Card className="w-full p-6 md:p-8" hover={false}>
             <div className="flex items-center justify-center py-8">
-              <svg className="animate-spin h-6 w-6 text-emerald-400" viewBox="0 0 24 24">
+              <svg className="animate-spin h-6 w-6 text-[color:var(--accent)]" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>

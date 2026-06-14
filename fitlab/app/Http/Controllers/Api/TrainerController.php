@@ -3,25 +3,27 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Trainer;
 use App\Http\Resources\TrainerResource;
+use App\Models\Trainer;
 
 class TrainerController extends Controller
 {
     public function index()
     {
-        $trainers = Trainer::with(['user', 'reviews.user'])->get();
+        $trainers = Trainer::with(['user', 'reviews.user', 'schedules.location', 'services'])
+            ->orderBy('name')
+            ->get();
 
         return TrainerResource::collection($trainers);
     }
 
     public function show($id)
     {
-        $trainer = Trainer::with(['user', 'reviews.user', 'schedules.location'])->find($id);
+        $trainer = Trainer::with(['user', 'reviews.user', 'schedules.location', 'services'])->find($id);
 
         if (!$trainer) {
             return response()->json([
-                'message' => 'Trainer not found'
+                'message' => 'Trainer not found',
             ], 404);
         }
 

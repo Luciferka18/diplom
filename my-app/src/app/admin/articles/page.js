@@ -1,224 +1,189 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import {
+  Archive,
+  BadgeCheck,
+  CheckCircle2,
+  Edit3,
+  Eye,
+  FileClock,
+  Loader2,
+  PenLine,
+  RefreshCw,
+  Search,
+  Sparkles,
+  Star,
+  XCircle,
+} from "lucide-react";
+import { apiGet, apiPatch } from "@/services/api";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import ArticleStatusBadge from "@/components/articles/ArticleStatusBadge";
+import { articleDate, categoryLabel, unwrapCollection } from "@/lib/articles";
 
-function slugifyRu(input) {
-  const s = String(input || "").trim().toLowerCase();
-
-  const map = {
-    а:"a", б:"b", в:"v", г:"g", д:"d", е:"e", ё:"e", ж:"zh", з:"z", и:"i", й:"y",
-    к:"k", л:"l", м:"m", н:"n", о:"o", п:"p", р:"r", с:"s", т:"t", у:"u", ф:"f",
-    х:"h", ц:"ts", ч:"ch", ш:"sh", щ:"sch", ъ:"", ы:"y", ь:"", э:"e", ю:"yu", я:"ya",
-  };
-
-  const translit = s
-    .split("")
-    .map((ch) => map[ch] ?? ch)
-    .join("");
-
-  return translit
-    .replace(/[^a-z0-9\s-]/g, "")   // выкинуть мусор
-    .replace(/\s+/g, "-")          // пробелы -> дефисы
-    .replace(/-+/g, "-")           // двойные дефисы
-    .replace(/^-|-$/g, "");        // trim дефисов
-}
+const FILTERS = [
+  ["pending", "На модерации"],
+  ["published", "Опубликованные"],
+  ["draft", "Черновики"],
+  ["rejected", "Отклонённые"],
+  ["archived", "Архив"],
+  ["all", "Все"],
+];
 
 export default function AdminArticlesPage() {
   const [items, setItems] = useState([]);
-  const [selected, setSelected] = useState(null);
+  const [status, setStatus] = useState("pending");
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState(null);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const [title, setTitle] = useState("");
-  const [slug, setSlug] = useState("");
-  const [content, setContent] = useState("");
-  const [status, setStatus] = useState("draft"); // draft | published
-
-  const [err, setErr] = useState("");
-  const [ok, setOk] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  const canPublish = useMemo(() => status === "published", [status]);
-
-  async function load() {
-    setErr(""); setOk("");
-    const r = await fetch("/api/articles", { cache: "no-store" });
-    const data = await r.json().catch(() => ({}));
-    if (!r.ok) {
-      setErr(data?.message || `Ошибка (${r.status})`);
-      return;
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const params = new URLSearchParams({ status, per_page: "50" });
+      if (query.trim()) params.set("q", query.trim());
+      const response = await apiGet(`/admin/articles?${params.toString()}`);
+      setItems(unwrapCollection(response));
+    } catch (e) {
+      setError(e?.data?.message || e?.message || "Не удалось загрузить статьи");
+    } finally {
+      setLoading(false);
     }
-    setItems(Array.isArray(data) ? data : (data.data ?? []));
-  }
+  }, [status, query]);
 
-  useEffect(() => { load(); }, []);
-
-  function pick(a) {
-    setSelected(a);
-    setTitle(a.title ?? "");
-    setSlug(a.slug ?? "");
-    setContent(a.content ?? "");
-    setStatus(a.status ?? "draft");
-  }
-
-  function resetForm() {
-    setSelected(null);
-    setTitle("");
-    setSlug("");
-    setContent("");
-    setStatus("draft");
-  }
-
-  // автослаг: если пользователь не трогал slug руками — обновляем от title
   useEffect(() => {
-    if (selected) return; // при редактировании не лезем
-    if (!title) return;
-    // если slug пустой или совпадает со старым автослагом — обновляем
-    setSlug((prev) => {
-      const auto = slugifyRu(title);
-      if (!prev) return auto;
-      return prev; // если пользователь уже ввёл — не трогаем
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title]);
+    const timer = window.setTimeout(load, 250);
+    return () => window.clearTimeout(timer);
+  }, [load]);
 
-  async function save() {
-    setBusy(true); setErr(""); setOk("");
+  const counts = useMemo(() => ({ total: items.length, trainers: items.filter((item) => item.is_trainer_article).length }), [items]);
+
+  async function moderate(article, nextStatus, reason = null, extra = {}) {
+    setBusyId(article.id);
+    setError("");
+    setSuccess("");
     try {
-      const finalSlug = slugifyRu(slug || title);
-      if (!finalSlug) throw new Error("Slug пустой. Введи заголовок или slug.");
-
-      const payload = {
-        title,
-        slug: finalSlug,
-        content,
-        status,
-        published_at: canPublish ? new Date().toISOString() : null,
-      };
-
-      const url = selected ? `/api/articles/${selected.id}` : "/api/articles";
-      const method = selected ? "PUT" : "POST";
-
-      const r = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify(payload),
-        cache: "no-store",
+      await apiPatch(`/admin/articles/${article.id}/moderate`, {
+        status: nextStatus,
+        rejection_reason: reason,
+        ...extra,
       });
-
-      const data = await r.json().catch(() => ({}));
-      if (!r.ok) {
-        // теперь прокси возвращает raw если это html — увидишь причину
-        const details =
-          data?.errors ? JSON.stringify(data.errors) :
-          data?.raw ? data.raw :
-          data?.message || `Ошибка (${r.status})`;
-        throw new Error(details);
-      }
-
-      setOk(selected ? "Сохранено ✅" : "Создано ✅");
+      setSuccess(nextStatus === "published" ? "Статья опубликована" : "Статус статьи обновлён");
       await load();
-      resetForm();
     } catch (e) {
-      setErr(e.message || "Ошибка");
+      setError(e?.data?.message || e?.message || "Не удалось изменить статус");
     } finally {
-      setBusy(false);
+      setBusyId(null);
     }
   }
 
-  async function remove(id) {
-    if (!confirm("Удалить статью?")) return;
-    setBusy(true); setErr(""); setOk("");
-    try {
-      const r = await fetch(`/api/articles/${id}`, { method: "DELETE", cache: "no-store" });
-      const data = await r.json().catch(() => ({}));
-      if (!r.ok) {
-        const details =
-          data?.errors ? JSON.stringify(data.errors) :
-          data?.raw ? data.raw :
-          data?.message || `Ошибка (${r.status})`;
-        throw new Error(details);
-      }
-      setOk("Удалено ✅");
-      await load();
-      if (selected?.id === id) resetForm();
-    } catch (e) {
-      setErr(e.message || "Ошибка");
-    } finally {
-      setBusy(false);
-    }
+  function reject(article) {
+    const reason = window.prompt("Укажите причину отклонения. Автор увидит её в личном кабинете.");
+    if (!reason?.trim()) return;
+    moderate(article, "rejected", reason.trim());
   }
 
   return (
-    <div className="card">
-      <div className="row" style={{ alignItems: "flex-start" }}>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <div className="h2">Статьи</div>
-          <div className="muted">Поля: title, slug, content, status, published_at</div>
+          <p className="text-sm font-bold uppercase tracking-[.18em] text-[color:var(--accent)]">Редакция журнала</p>
+          <h1 className="mt-2 text-4xl font-black">Статьи</h1>
+          <p className="mt-2 text-[color:var(--muted)]">Модерация пользовательских материалов и управление публикациями тренеров.</p>
         </div>
-        <button className="btn" onClick={load} disabled={busy}>Обновить</button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={load}><RefreshCw className="h-4 w-4" /> Обновить</Button>
+          <Button as={Link} href="/account/articles/new"><PenLine className="h-4 w-4" /> Новая статья</Button>
+        </div>
       </div>
 
-      {err ? <div className="error" style={{ marginTop: 10, whiteSpace: "pre-wrap" }}>{err}</div> : null}
-      {ok ? (
-        <div style={{ marginTop: 10, padding: 10, borderRadius: 12, background: "#ecfdf5", border: "1px solid #a7f3d0" }}>
-          {ok}
-        </div>
-      ) : null}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card hover={false} className="flex items-center gap-4">
+          <div className="rounded-xl bg-[color:var(--warning-soft)] p-3 text-[color:var(--warning)]"><FileClock className="h-5 w-5" /></div>
+          <div><p className="text-2xl font-black">{status === "pending" ? counts.total : "—"}</p><p className="text-sm text-[color:var(--muted)]">Ожидают проверки</p></div>
+        </Card>
+        <Card hover={false} className="flex items-center gap-4">
+          <div className="rounded-xl bg-[color:var(--accent-soft)] p-3 text-[color:var(--accent)]"><BadgeCheck className="h-5 w-5" /></div>
+          <div><p className="text-2xl font-black">{counts.trainers}</p><p className="text-sm text-[color:var(--muted)]">Материалов тренеров</p></div>
+        </Card>
+        <Card hover={false} className="flex items-center gap-4">
+          <div className="rounded-xl bg-[color:var(--secondary-soft)] p-3 text-[color:var(--secondary)]"><Eye className="h-5 w-5" /></div>
+          <div><p className="text-2xl font-black">{items.reduce((sum, item) => sum + Number(item.views_count || 0), 0)}</p><p className="text-sm text-[color:var(--muted)]">Просмотров в выборке</p></div>
+        </Card>
+      </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 12, marginTop: 12 }}>
-        <div className="card" style={{ background: "transparent" }}>
-          <div className="muted" style={{ marginBottom: 8 }}>Список</div>
-          <div className="list">
-            {items.map((a) => (
-              <div key={a.id} className="listItem" style={{ display: "flex", gap: 10, justifyContent: "space-between" }}>
-                <button className="btn btnOutline" style={{ flex: 1, textAlign: "left" }} onClick={() => pick(a)}>
-                  <b>{a.title ?? `Статья #${a.id}`}</b>
-                  <div className="muted">
-                    ID: {a.id}{a.slug ? ` • ${a.slug}` : ""}{a.status ? ` • ${a.status}` : ""}
-                  </div>
-                </button>
-                <button className="btn" onClick={() => remove(a.id)} disabled={busy}>✕</button>
-              </div>
+      <Card hover={false} className="space-y-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {FILTERS.map(([value, label]) => (
+              <button key={value} type="button" onClick={() => setStatus(value)} className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition ${status === value ? "border-[color:var(--accent)] bg-[color:var(--accent)] text-[color:var(--on-accent)]" : "border-[color:var(--stroke)] text-[color:var(--muted)]"}`}>
+                {label}
+              </button>
             ))}
           </div>
+          <label className="relative min-w-64">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[color:var(--muted)]" />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Поиск по статьям" className="h-11 w-full rounded-xl border border-[color:var(--stroke)] bg-[color:var(--bg)] pl-10 pr-3 outline-none focus:border-[color:var(--accent)]" />
+          </label>
         </div>
+      </Card>
 
-        <div className="card" style={{ background: "transparent" }}>
-          <div className="muted" style={{ marginBottom: 8 }}>
-            {selected ? `Редактирование #${selected.id}` : "Создание"}
-          </div>
+      {error ? <div className="rounded-2xl border border-[color:color-mix(in_srgb,var(--danger)_40%,var(--stroke))] bg-[color:var(--danger-soft)] p-4 text-[color:var(--danger)]">{error}</div> : null}
+      {success ? <div className="rounded-2xl border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] p-4 text-[color:var(--accent)]">{success}</div> : null}
 
-          <input className="input" placeholder="Заголовок" value={title} onChange={(e) => setTitle(e.target.value)} />
-          <div style={{ height: 8 }} />
-
-          <input
-            className="input"
-            placeholder="Slug (латиница, авто по заголовку)"
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-          />
-          <div style={{ height: 8 }} />
-
-          <select className="input" value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value="draft">draft</option>
-            <option value="published">published</option>
-          </select>
-
-          <div style={{ height: 8 }} />
-
-          <textarea className="input" placeholder="Контент" rows={10} value={content} onChange={(e) => setContent(e.target.value)} />
-
-          <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-            <button className="btn btn-primary" onClick={save} disabled={busy}>
-              {selected ? "Сохранить" : "Создать"}
-            </button>
-            <button className="btn btnOutline" onClick={resetForm} disabled={busy}>Сброс</button>
-          </div>
-
-          <div className="muted" style={{ marginTop: 10 }}>
-            Slug автоматически приводится к латинице. Это убирает 500 из-за кириллицы/пустого slug.
-          </div>
+      {loading ? (
+        <Card hover={false} className="flex min-h-72 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[color:var(--accent)]" /></Card>
+      ) : items.length === 0 ? (
+        <Card hover={false} className="py-16 text-center"><CheckCircle2 className="mx-auto h-11 w-11 text-[color:var(--accent)]" /><h2 className="mt-4 text-xl font-black">В этом разделе всё чисто</h2><p className="mt-2 text-[color:var(--muted)]">Статей с выбранным статусом нет.</p></Card>
+      ) : (
+        <div className="space-y-4">
+          {items.map((article) => {
+            const busy = busyId === article.id;
+            return (
+              <Card key={article.id} hover={false} className={`overflow-hidden p-0 ${article.is_trainer_article ? "border-[color:var(--accent-border)]" : ""}`}>
+                <div className="grid lg:grid-cols-[190px_1fr_auto]">
+                  <div className="min-h-44 bg-gradient-to-br from-emerald-500/20 to-cyan-500/20">
+                    {article.cover_image_url ? <img src={article.cover_image_url} alt={article.title} className="h-full w-full object-cover" /> : null}
+                  </div>
+                  <div className="p-5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <ArticleStatusBadge status={article.status} />
+                      <span className="text-xs font-semibold text-[color:var(--muted)]">{categoryLabel(article.category)}</span>
+                      {article.is_trainer_article ? <span className="inline-flex items-center gap-1 rounded-full bg-[color:var(--accent-soft)] px-2.5 py-1 text-xs font-bold text-[color:var(--accent)]"><BadgeCheck className="h-3.5 w-3.5" /> Тренер</span> : null}
+                      {article.is_featured ? <span className="inline-flex items-center gap-1 rounded-full bg-[color:var(--warning-soft)] px-2.5 py-1 text-xs font-bold text-[color:var(--warning)]"><Star className="h-3.5 w-3.5 fill-amber-300" /> Главная</span> : null}
+                    </div>
+                    <h2 className="mt-3 text-xl font-black">{article.title}</h2>
+                    <p className="mt-2 line-clamp-2 max-w-3xl text-sm leading-6 text-[color:var(--muted)]">{article.excerpt}</p>
+                    <div className="mt-4 flex flex-wrap gap-4 text-xs text-[color:var(--muted)]">
+                      <span>Автор: <strong className="text-[color:var(--text)]">{article.author?.name || "Не указан"}</strong></span>
+                      <span>Обновлено: {articleDate(article.updated_at)}</span>
+                      <span>{article.views_count || 0} просмотров</span>
+                    </div>
+                    {article.rejection_reason ? <div className="mt-4 rounded-xl border border-[color:color-mix(in_srgb,var(--danger)_40%,var(--stroke))] bg-[color:var(--danger-soft)] p-3 text-sm text-[color:var(--danger)]">Причина: {article.rejection_reason}</div> : null}
+                  </div>
+                  <div className="flex min-w-52 flex-col justify-center gap-2 border-t border-[color:var(--stroke)] p-4 lg:border-l lg:border-t-0">
+                    <Button as={Link} href={`/articles/${article.id}`} size="sm" variant="outline"><Eye className="h-4 w-4" /> Просмотр</Button>
+                    <Button as={Link} href={`/account/articles/${article.id}/edit`} size="sm" variant="outline"><Edit3 className="h-4 w-4" /> Редактировать</Button>
+                    {article.status !== "published" ? <Button size="sm" disabled={busy} onClick={() => moderate(article, "published")}><CheckCircle2 className="h-4 w-4" /> Опубликовать</Button> : null}
+                    {article.status === "pending" ? <Button size="sm" variant="outline" disabled={busy} className="border-[color:color-mix(in_srgb,var(--danger)_40%,var(--stroke))] text-[color:var(--danger)]" onClick={() => reject(article)}><XCircle className="h-4 w-4" /> Отклонить</Button> : null}
+                    {article.status === "published" ? (
+                      <Button size="sm" variant="outline" disabled={busy} onClick={() => moderate(article, "published", null, { is_featured: !article.is_featured })}>
+                        <Sparkles className="h-4 w-4" /> {article.is_featured ? "Убрать с главной" : "На главную"}
+                      </Button>
+                    ) : null}
+                    {article.status !== "archived" ? <Button size="sm" variant="ghost" disabled={busy} onClick={() => moderate(article, "archived")}><Archive className="h-4 w-4" /> В архив</Button> : null}
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
         </div>
-      </div>
+      )}
     </div>
   );
 }

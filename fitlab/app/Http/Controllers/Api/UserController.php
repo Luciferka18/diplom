@@ -84,7 +84,7 @@ class UserController extends Controller
             'duration_days' => ['nullable', 'integer', 'min:1', 'max:365'],
         ]);
 
-        $user->ban($request->reason, $request->duration_days);
+        $user->ban($request->reason, $request->duration_days, $admin->id);
 
         return response()->json([
             'message' => 'Пользователь заблокирован',

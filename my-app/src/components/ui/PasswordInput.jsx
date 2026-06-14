@@ -27,7 +27,7 @@ export function PasswordInput({
     strength = Object.values(checks).filter(Boolean).length;
 
     const labels = ["Слабый", "Средний", "Хороший", "Надёжный"];
-    const colors = ["bg-red-500", "bg-orange-500", "bg-yellow-500", "bg-emerald-500"];
+    const colors = ["bg-red-500", "bg-orange-500", "bg-yellow-500", "bg-[color:var(--accent)]"];
 
     return {
       strength,
@@ -45,7 +45,7 @@ export function PasswordInput({
         <input
           type={showPassword ? "text" : "password"}
           className={cn(
-            "w-full rounded-xl border border-[color:var(--stroke)] bg-[color:var(--panel)] px-3 py-2.5 pr-11 text-[color:var(--text)] placeholder:text-[color:var(--muted2)] focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)] focus:border-[color:var(--accent)]",
+            "w-full rounded-[14px] border border-[color:var(--stroke)] bg-[color:var(--elevated)] px-3.5 py-3 shadow-[var(--shadow-xs)] pr-11 text-[color:var(--text)] placeholder:text-[color:var(--muted2)] outline-none transition hover:border-[color:var(--stroke-strong)] focus:border-[color:var(--accent)] focus:ring-4 focus:ring-[color:color-mix(in_srgb,var(--accent)_14%,transparent)]",
             className
           )}
           placeholder={placeholder}

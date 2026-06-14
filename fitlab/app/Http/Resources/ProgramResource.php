@@ -14,10 +14,16 @@ class ProgramResource extends JsonResource
             'title' => $this->title,
             'description' => $this->description,
             'level' => $this->level,
-            'duration_weeks' => $this->duration_weeks,
-            'price' => $this->price,
+            'duration_weeks' => (int) ($this->duration_weeks ?: 1),
+            'price' => 0,
+            'is_free' => true,
             'image_url' => $this->image_url,
             'trainer' => new TrainerResource($this->whenLoaded('trainer')),
+            'workouts_count' => $this->when(
+                isset($this->workouts_count),
+                fn () => (int) $this->workouts_count
+            ),
+            'workouts' => WorkoutResource::collection($this->whenLoaded('workouts')),
         ];
     }
 }

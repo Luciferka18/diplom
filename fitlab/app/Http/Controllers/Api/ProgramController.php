@@ -11,7 +11,7 @@ class ProgramController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Program::with('trainer');
+        $query = Program::with('trainer')->withCount('workouts');
 
         if ($request->filled('level')) {
             $query->where('level', $request->string('level'));
@@ -31,6 +31,6 @@ class ProgramController extends Controller
 
     public function show(Program $program)
     {
-        return new ProgramResource($program->load('trainer'));
+        return new ProgramResource($program->load(['trainer', 'workouts'])->loadCount('workouts'));
     }
 }

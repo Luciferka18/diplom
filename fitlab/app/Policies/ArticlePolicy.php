@@ -9,7 +9,7 @@ class ArticlePolicy
 {
     public function update(User $user, Article $article): bool
     {
-        return $user->isAdmin() || ($user->isTrainer() && $article->author_user_id === $user->id);
+        return $user->isAdmin() || $article->author_user_id === $user->id;
     }
 
     public function delete(User $user, Article $article): bool

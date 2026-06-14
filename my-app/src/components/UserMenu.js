@@ -42,7 +42,7 @@ export function UserMenu() {
           </a>
           <button
             onClick={handleLogout}
-            className="px-3 py-1.5 rounded-xl border border-[color:var(--stroke)] bg-[color:var(--panel)] text-[color:var(--muted)] hover:text-red-400 hover:border-red-500/30 transition-colors"
+            className="px-3 py-1.5 rounded-xl border border-[color:var(--stroke)] bg-[color:var(--panel)] text-[color:var(--muted)] hover:text-[color:var(--danger)] hover:border-[color:color-mix(in_srgb,var(--danger)_40%,var(--stroke))] transition-colors"
           >
             Выйти
           </button>

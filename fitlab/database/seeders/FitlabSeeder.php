@@ -65,7 +65,7 @@ class FitlabSeeder extends Seeder
             'description' => 'Программа на 6 недель для новичков.',
             'level' => 'beginner',
             'duration_weeks' => 6,
-            'price' => 3900,
+            'price' => 0,
         ]);
         $program->tags()->attach($tag->id);
 

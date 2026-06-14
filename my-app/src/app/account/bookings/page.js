@@ -2,216 +2,128 @@
 
 import { useEffect, useState } from "react";
 import { apiGet, apiPatch } from "@/services/api";
-import Card from "@/components/ui/Card";
-import Badge from "@/components/ui/Badge";
-import Button from "@/components/ui/Button";
-import { Calendar, Clock, MapPin, User, AlertCircle, CheckCircle2 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import MockPaymentPanel from "@/components/payments/MockPaymentPanel";
+import { AlertCircle, Calendar, CheckCircle2, Clock, CreditCard, Dumbbell, MapPin, Phone, User } from "lucide-react";
 
 const statusColors = {
-  pending: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
-  confirmed: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+  booked: "bg-yellow-500/20 text-[color:var(--warning)] border-yellow-500/30",
   completed: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-  cancelled: "bg-red-500/20 text-red-300 border-red-500/30",
+  cancelled: "bg-[color:var(--danger-soft)] text-[color:var(--danger)] border-[color:color-mix(in_srgb,var(--danger)_40%,var(--stroke))]",
 };
+const statusNames = { booked: "Записан", completed: "Завершено", cancelled: "Отменено" };
+const money = (value = 0) => new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 }).format(Number(value || 0) / 100);
+const list = (response) => Array.isArray(response) ? response : Array.isArray(response?.data) ? response.data : Array.isArray(response?.bookings) ? response.bookings : [];
 
-const statusNames = {
-  pending: "Ожидает подтверждения",
-  confirmed: "Подтверждено",
-  completed: "Завершено",
-  cancelled: "Отменено",
-};
+function errorText(error, fallback) {
+  const errors = error?.data?.errors;
+  if (errors && typeof errors === "object") {
+    const messages = Object.values(errors).flat().filter(Boolean);
+    if (messages.length) return messages.join(" ");
+  }
+  return error?.data?.message || error?.message || fallback;
+}
 
 export default function AccountBookingsPage() {
+  const { user } = useAuth();
+  const isTrainer = user?.role === "trainer";
   const [bookings, setBookings] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
-  const [successMessage, setSuccessMessage] = useState("");
+  const [success, setSuccess] = useState("");
+  const [payment, setPayment] = useState(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    
-    const loadBookings = async () => {
-      try {
-        const data = await apiGet("/bookings");
-        const list = Array.isArray(data) ? data : (data.data ?? []);
-        if (!cancelled) setBookings(list);
-      } catch (e) {
-        if (!cancelled) setError(e.message || "Ошибка загрузки");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    loadBookings();
-    return () => { cancelled = true; };
-  }, []);
-
-  const handleCancel = async (bookingId) => {
-    if (!confirm("Вы уверены, что хотите отменить запись?")) return;
-
-    setActionLoading(bookingId);
+  async function load() {
+    setLoading(true);
+    setError("");
     try {
-      await apiPatch(`/admin/bookings/${bookingId}/status`, { status: "cancelled" });
-      setBookings((prev) =>
-        prev.map((b) =>
-          b.id === bookingId ? { ...b, status: "cancelled" } : b
-        )
-      );
-      setSuccessMessage("Запись отменена");
-      setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (e) {
-      setError(e.message || "Ошибка при отмене");
+      setBookings(list(await apiGet("/bookings?per_page=100")));
+    } catch (loadError) {
+      setError(errorText(loadError, "Ошибка загрузки"));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { load(); }, [user?.role]);
+
+  async function cancel(id) {
+    if (!confirm(isTrainer ? "Отменить запись клиента?" : "Отменить запись?")) return;
+    setActionLoading(id);
+    try {
+      const response = await apiPatch(`/bookings/${id}/cancel`, {});
+      setBookings((prev) => prev.map((item) => item.id === id ? { ...item, ...(response?.booking || {}), status: "cancelled" } : item));
+      setSuccess("Запись отменена");
+      setTimeout(() => setSuccess(""), 2500);
+    } catch (cancelError) {
+      setError(errorText(cancelError, "Не удалось отменить запись"));
     } finally {
       setActionLoading(null);
     }
-  };
+  }
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "—";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("ru-RU", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  const formatTime = (dateString) => {
-    if (!dateString) return "—";
-    const date = new Date(dateString);
-    return date.toLocaleTimeString("ru-RU", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  const formatDate = (booking) => new Date(booking.starts_at || booking.date).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
+  const formatTime = (booking) => booking.time || new Date(booking.starts_at).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-white">Мои бронирования</h1>
-        <p className="text-[color:var(--muted)] mt-1">
-          Записи на тренировки и занятия с тренерами
-        </p>
+        <h1 className="text-3xl font-black text-[color:var(--text)]">{isTrainer ? "Клиенты и записи" : "Мои бронирования"}</h1>
+        <p className="mt-1 text-[color:var(--muted)]">{isTrainer ? "Пользователи, которые записались к вам на тренировки и консультации." : "Офлайн-тренировки, услуги и оплата."}</p>
       </div>
 
-      {successMessage && (
-        <Card hover={false} className="p-4 bg-emerald-500/10 border-emerald-500/30">
-          <div className="flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-            <p className="text-emerald-300">{successMessage}</p>
-          </div>
-        </Card>
-      )}
+      {success ? <div className="flex items-center gap-3 rounded-xl border border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] p-4 text-[color:var(--accent)]"><CheckCircle2 className="h-5 w-5" />{success}</div> : null}
+      {error ? <div className="flex items-start gap-3 rounded-xl border border-[color:color-mix(in_srgb,var(--danger)_40%,var(--stroke))] bg-[color:var(--danger-soft)] p-4 text-[color:var(--danger)]"><AlertCircle className="mt-0.5 h-5 w-5" /><div>{error}<button onClick={load} className="ml-2 underline">Повторить</button></div></div> : null}
 
-      {loading && (
-        <Card hover={false} className="p-8 text-center">
-          <div className="flex items-center justify-center gap-3 text-[color:var(--muted)]">
-            <Clock className="w-5 h-5 animate-spin" />
-            Загрузка бронирований...
-          </div>
-        </Card>
-      )}
-
-      {error && (
-        <Card hover={false} className="p-4 bg-red-500/10 border-red-500/30">
-          <div className="flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-            <p className="text-red-300">{error}</p>
-          </div>
-        </Card>
-      )}
-
-      {!loading && !error && bookings.length === 0 && (
-        <Card hover={false} className="p-8 text-center">
-          <Calendar className="w-12 h-12 mx-auto text-[color:var(--muted)] mb-4" />
-          <h3 className="text-lg font-semibold text-[color:var(--text)] mb-2">
-            Пока нет записей
-          </h3>
-          <p className="text-[color:var(--muted)] mb-4">
-            Запишитесь на первую тренировку с тренером
-          </p>
-          <a href="/trainers" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 text-white font-medium hover:bg-emerald-600 transition-colors">
-            Выбрать тренера
-          </a>
-        </Card>
-      )}
+      {loading ? <div className="h-44 animate-pulse rounded-3xl bg-[color:var(--panel)]" /> : bookings.length === 0 ? (
+        <div className="rounded-3xl border border-[color:var(--stroke)] bg-[color:var(--panel)] p-8 text-center">
+          <Calendar className="mx-auto h-10 w-10 text-[color:var(--muted)]" />
+          <h2 className="mt-4 text-xl font-bold text-[color:var(--text)]">{isTrainer ? "К вам пока никто не записан" : "Пока нет записей"}</h2>
+          {isTrainer ? <p className="mt-2 text-sm text-[color:var(--muted)]">Новые клиенты появятся здесь автоматически после оформления записи.</p> : <a href="/booking" className="mt-5 inline-flex rounded-xl bg-[color:var(--accent)] px-5 py-3 font-bold text-[color:var(--on-accent)]">Записаться к тренеру</a>}
+        </div>
+      ) : null}
 
       <div className="space-y-4">
         {bookings.map((booking) => (
-          <Card key={booking.id} hover={false} className="p-6">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
+          <article key={booking.id} className="rounded-3xl border border-[color:var(--stroke)] bg-[color:var(--panel)] p-5 md:p-6">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-                  <Calendar className="w-6 h-6 text-cyan-400" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span className="text-lg font-bold text-white">
-                      Запись #{booking.id}
-                    </span>
-                    <Badge className={statusColors[booking.status] || statusColors.pending}>
-                      {statusNames[booking.status] || booking.status}
-                    </Badge>
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[color:var(--secondary-soft)] text-[color:var(--secondary)]"><Dumbbell className="h-6 w-6" /></div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h2 className="text-lg font-black text-[color:var(--text)]">{booking.service?.name || `Запись #${booking.id}`}</h2>
+                    <span className={`rounded-full border px-3 py-1 text-xs font-bold ${statusColors[booking.status] || statusColors.booked}`}>{statusNames[booking.status] || booking.status}</span>
+                    {booking.payment_status === "pending" ? <span className="rounded-full bg-orange-400/10 px-3 py-1 text-xs font-bold text-orange-300">Ожидает оплаты</span> : null}
                   </div>
-                  
-                  <div className="mt-3 space-y-2">
-                    {booking.date && (
-                      <div className="flex items-center gap-2 text-[color:var(--muted)]">
-                        <Calendar className="w-4 h-4" />
-                        <span>{formatDate(booking.date)}</span>
-                      </div>
-                    )}
-                    {booking.starts_at && (
-                      <div className="flex items-center gap-2 text-[color:var(--muted)]">
-                        <Clock className="w-4 h-4" />
-                        <span>{formatTime(booking.starts_at)}</span>
-                      </div>
-                    )}
-                    {booking.trainer?.name && (
-                      <div className="flex items-center gap-2 text-[color:var(--muted)]">
-                        <User className="w-4 h-4" />
-                        <span>Тренер: {booking.trainer.name}</span>
-                      </div>
-                    )}
-                    {booking.program?.title && (
-                      <div className="flex items-center gap-2 text-[color:var(--muted)]">
-                        <MapPin className="w-4 h-4" />
-                        <span>Программа: {booking.program.title}</span>
-                      </div>
-                    )}
-                    {booking.gym_location_id && (
-                      <div className="flex items-center gap-2 text-[color:var(--muted)]">
-                        <MapPin className="w-4 h-4" />
-                        <span>Филиал: {booking.gym_location_id}</span>
-                      </div>
-                    )}
+
+                  <div className="mt-3 grid gap-2 text-sm text-[color:var(--muted)] sm:grid-cols-2">
+                    <span className="flex items-center gap-2"><Calendar className="h-4 w-4" />{formatDate(booking)}</span>
+                    <span className="flex items-center gap-2"><Clock className="h-4 w-4" />{formatTime(booking)} · {booking.duration_minutes} мин</span>
+                    {isTrainer ? <span className="flex items-center gap-2"><User className="h-4 w-4" />{booking.client_name || booking.user?.name || "Клиент"}</span> : booking.trainer?.name ? <span className="flex items-center gap-2"><User className="h-4 w-4" />{booking.trainer.name}</span> : null}
+                    {booking.location?.name ? <span className="flex items-center gap-2"><MapPin className="h-4 w-4" />{booking.location.name}</span> : null}
+                    {isTrainer && booking.client_phone ? <a href={`tel:${booking.client_phone}`} className="flex items-center gap-2 text-[color:var(--secondary)] hover:text-[color:var(--secondary)]"><Phone className="h-4 w-4" />{booking.client_phone}</a> : null}
                   </div>
+
+                  {booking.discount_amount > 0 && !isTrainer ? <div className="mt-3 text-sm text-[color:var(--accent)]">Скидка по промокоду: {money(booking.discount_amount)}</div> : null}
                 </div>
               </div>
 
-              {booking.status === "pending" && (
-                <Button
-                  variant="outline"
-                  onClick={() => handleCancel(booking.id)}
-                  disabled={actionLoading === booking.id}
-                  className="text-red-400 border-red-500/30 hover:bg-red-500/10 hover:text-red-300"
-                >
-                  {actionLoading === booking.id ? "Отмена..." : "Отменить запись"}
-                </Button>
-              )}
+              <div className="flex flex-col items-stretch gap-2 sm:flex-row lg:flex-col lg:items-end">
+                <div className="text-right"><div className="text-xs text-[color:var(--muted)]">Стоимость</div><div className="text-xl font-black text-[color:var(--text)]">{booking.total_amount ? money(booking.total_amount) : "Бесплатно"}</div></div>
+                <div className="flex gap-2">
+                  {!isTrainer && booking.payment?.status === "pending" ? <button onClick={() => setPayment(booking.payment)} className="flex items-center gap-2 rounded-xl bg-[color:var(--accent)] px-4 py-2 text-sm font-bold text-[color:var(--on-accent)]"><CreditCard className="h-4 w-4" />Оплатить</button> : null}
+                  {booking.status === "booked" ? <button onClick={() => cancel(booking.id)} disabled={actionLoading === booking.id} className="rounded-xl border border-[color:color-mix(in_srgb,var(--danger)_40%,var(--stroke))] px-4 py-2 text-sm font-bold text-[color:var(--danger)] hover:bg-[color:var(--danger-soft)]">{actionLoading === booking.id ? "Отменяем…" : isTrainer ? "Отменить запись" : "Отменить"}</button> : null}
+                </div>
+              </div>
             </div>
 
-            {booking.comment && (
-              <div className="border-t border-[color:var(--stroke)] pt-4 mt-4">
-                <p className="text-sm text-[color:var(--muted)]">
-                  <span className="font-medium">Комментарий:</span> {booking.comment}
-                </p>
-              </div>
-            )}
-          </Card>
+            {booking.client_comment ? <div className="mt-5 border-t border-[color:var(--stroke)] pt-4 text-sm text-[color:var(--muted)]"><b className="text-[color:var(--text)]">Комментарий клиента:</b> {booking.client_comment}</div> : null}
+          </article>
         ))}
       </div>
+
+      {payment ? <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/75 p-4 backdrop-blur-sm"><div className="mx-auto flex min-h-full max-w-2xl items-center py-8"><div className="w-full"><MockPaymentPanel payment={payment} title="Оплата тренировки" onCancel={() => setPayment(null)} onSuccess={async () => { setPayment(null); await load(); }} /></div></div></div> : null}
     </div>
   );
 }

@@ -142,26 +142,26 @@ export default function TwoFactorSettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-white">Двухфакторная аутентификация</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-[color:var(--text)]">Двухфакторная аутентификация</h1>
         <p className="text-[color:var(--muted)] mt-1">
           Повысьте безопасность вашего аккаунта с помощью 2FA
         </p>
       </div>
 
       {success && (
-        <Card hover={false} className="p-4 bg-emerald-500/10 border-emerald-500/30">
+        <Card hover={false} className="p-4 bg-[color:var(--accent-soft)] border-[color:var(--accent-border)]">
           <div className="flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-            <p className="text-emerald-300">{success}</p>
+            <CheckCircle2 className="w-5 h-5 text-[color:var(--accent)] flex-shrink-0" />
+            <p className="text-[color:var(--accent)]">{success}</p>
           </div>
         </Card>
       )}
 
       {error && (
-        <Card hover={false} className="p-4 bg-red-500/10 border-red-500/30">
+        <Card hover={false} className="p-4 bg-[color:var(--danger-soft)] border-[color:color-mix(in_srgb,var(--danger)_40%,var(--stroke))]">
           <div className="flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
-            <p className="text-red-300">{error}</p>
+            <AlertTriangle className="w-5 h-5 text-[color:var(--danger)] flex-shrink-0" />
+            <p className="text-[color:var(--danger)]">{error}</p>
           </div>
         </Card>
       )}
@@ -172,15 +172,15 @@ export default function TwoFactorSettingsPage() {
           <div className="flex items-center gap-3">
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
               twoFactorEnabled 
-                ? "bg-emerald-500/10" 
+                ? "bg-[color:var(--accent-soft)]" 
                 : "bg-[color:var(--stroke)]"
             }`}>
               <Shield className={`w-6 h-6 ${
-                twoFactorEnabled ? "text-emerald-400" : "text-[color:var(--muted)]"
+                twoFactorEnabled ? "text-[color:var(--accent)]" : "text-[color:var(--muted)]"
               }`} />
             </div>
             <div>
-              <h3 className="font-semibold text-white">
+              <h3 className="font-semibold text-[color:var(--text)]">
                 {twoFactorEnabled ? "2FA включен" : "2FA отключен"}
               </h3>
               <p className="text-sm text-[color:var(--muted)]">
@@ -191,7 +191,7 @@ export default function TwoFactorSettingsPage() {
             </div>
           </div>
           <Badge className={twoFactorEnabled 
-            ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" 
+            ? "bg-[color:var(--accent-soft)] text-[color:var(--accent)] border-[color:var(--accent-border)]" 
             : "bg-[color:var(--stroke)] text-[color:var(--muted)] border-[color:var(--stroke)]"
           }>
             {twoFactorEnabled ? "Активно" : "Неактивно"}
@@ -204,7 +204,7 @@ export default function TwoFactorSettingsPage() {
         <Card hover={false} className="p-6">
           <div className="text-center py-8">
             <Smartphone className="w-16 h-16 mx-auto text-[color:var(--muted)] mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">
+            <h3 className="text-xl font-semibold text-[color:var(--text)] mb-2">
               Защитите свой аккаунт
             </h3>
             <p className="text-[color:var(--muted)] mb-6 max-w-md mx-auto">
@@ -221,7 +221,7 @@ export default function TwoFactorSettingsPage() {
       {/* Шаг 1: QR-код */}
       {!twoFactorEnabled && step === 1 && (
         <Card hover={false} className="p-6">
-          <h3 className="text-xl font-semibold text-white mb-4">
+          <h3 className="text-xl font-semibold text-[color:var(--text)] mb-4">
             Шаг 1: Отсканируйте QR-код
           </h3>
 
@@ -269,7 +269,7 @@ export default function TwoFactorSettingsPage() {
       {/* Шаг 2: Проверка кода */}
       {!twoFactorEnabled && step === 2 && (
         <Card hover={false} className="p-6">
-          <h3 className="text-xl font-semibold text-white mb-4">
+          <h3 className="text-xl font-semibold text-[color:var(--text)] mb-4">
             Шаг 2: Подтвердите код
           </h3>
           
@@ -302,8 +302,8 @@ export default function TwoFactorSettingsPage() {
           {recoveryCodes.length > 0 && (
             <div className="mt-8 pt-6 border-t border-[color:var(--stroke)]">
               <div className="flex items-center gap-2 mb-3">
-                <AlertTriangle className="w-5 h-5 text-amber-400" />
-                <h4 className="font-semibold text-white">Коды восстановления</h4>
+                <AlertTriangle className="w-5 h-5 text-[color:var(--warning)]" />
+                <h4 className="font-semibold text-[color:var(--text)]">Коды восстановления</h4>
               </div>
               <p className="text-sm text-[color:var(--muted)] mb-4">
                 Сохраните эти коды в безопасном месте. Они понадобятся для доступа к аккаунту, 
@@ -335,8 +335,8 @@ export default function TwoFactorSettingsPage() {
         <>
           <Card hover={false} className="p-6">
             <div className="flex items-center gap-3 mb-4">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-              <h3 className="font-semibold text-white">2FA активирован</h3>
+              <CheckCircle2 className="w-5 h-5 text-[color:var(--accent)]" />
+              <h3 className="font-semibold text-[color:var(--text)]">2FA активирован</h3>
             </div>
             <p className="text-[color:var(--muted)]">
               Теперь при входе в аккаунт потребуется вводить код из приложения Authenticator.
@@ -344,7 +344,7 @@ export default function TwoFactorSettingsPage() {
           </Card>
 
           <Card hover={false} className="p-6">
-            <h3 className="font-semibold text-white mb-4">Отключить 2FA</h3>
+            <h3 className="font-semibold text-[color:var(--text)] mb-4">Отключить 2FA</h3>
             <p className="text-sm text-[color:var(--muted)] mb-4">
               Для отключения двухфакторной аутентификации введите ваш пароль
             </p>
@@ -357,7 +357,7 @@ export default function TwoFactorSettingsPage() {
               <Button 
                 variant="outline" 
                 onClick={disableTwoFactor}
-                className="text-red-400 border-red-500/30 hover:bg-red-500/10 hover:text-red-300"
+                className="text-[color:var(--danger)] border-[color:color-mix(in_srgb,var(--danger)_40%,var(--stroke))] hover:bg-[color:var(--danger-soft)] hover:text-[color:var(--danger)]"
               >
                 <Lock className="w-4 h-4 mr-2" />
                 Отключить 2FA
@@ -367,8 +367,8 @@ export default function TwoFactorSettingsPage() {
 
           <Card hover={false} className="p-6">
             <div className="flex items-center gap-3 mb-4">
-              <RefreshCw className="w-5 h-5 text-cyan-400" />
-              <h3 className="font-semibold text-white">Коды восстановления</h3>
+              <RefreshCw className="w-5 h-5 text-[color:var(--secondary)]" />
+              <h3 className="font-semibold text-[color:var(--text)]">Коды восстановления</h3>
             </div>
             <p className="text-sm text-[color:var(--muted)] mb-4">
               Сгенерируйте новые коды восстановления для доступа к аккаунту
@@ -400,7 +400,7 @@ export default function TwoFactorSettingsPage() {
                         className="p-1 rounded hover:bg-[color:var(--stroke)]"
                       >
                         {success === "Код скопирован в буфер обмена" ? (
-                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                          <Check className="w-3.5 h-3.5 text-[color:var(--accent)]" />
                         ) : (
                           <Copy className="w-3.5 h-3.5 text-[color:var(--muted)]" />
                         )}

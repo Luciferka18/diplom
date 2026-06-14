@@ -1,0 +1,216 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f3f6fb;
+  --bg2: #e8edf5;
+  --panel: #ffffff;
+  --stroke: #d6dee8;
+  --text: #0f172a;
+  --muted: #5b6b80;
+  --muted2: #7a889a;
+  --accent: #0f9f7a;
+  --accent-hover: #0d8969;
+  --accent2: #0ea5c0;
+  --accentGlow: rgba(15, 159, 122, 0.18);
+}
+
+.dark {
+  --bg: #0b1220;
+  --bg2: #101827;
+  --panel: #151e2e;
+  --stroke: #263246;
+  --text: #e7edf7;
+  --muted: #9aa8bc;
+  --muted2: #7f8da3;
+  --accent: #22b78f;
+  --accent-hover: #1da27f;
+  --accent2: #22b8cf;
+  --accentGlow: rgba(34, 183, 143, 0.24);
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  background: linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%);
+  color: var(--text);
+}
+
+/* Rich article editor and reader */
+.article-content {
+  color: var(--text);
+  font-size: 1.05rem;
+  line-height: 1.85;
+  overflow-wrap: anywhere;
+}
+
+.article-content > *:first-child {
+  margin-top: 0;
+}
+
+.article-content p {
+  margin: 1.15rem 0;
+  color: var(--text);
+}
+
+.article-content h2 {
+  margin: 2.8rem 0 1rem;
+  scroll-margin-top: 7rem;
+  font-size: clamp(1.65rem, 3vw, 2.15rem);
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+
+.article-content h3 {
+  margin: 2rem 0 0.8rem;
+  scroll-margin-top: 7rem;
+  font-size: clamp(1.3rem, 2.3vw, 1.65rem);
+  line-height: 1.3;
+  font-weight: 800;
+}
+
+.article-content h4 {
+  margin: 1.5rem 0 0.6rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.article-content ul,
+.article-content ol {
+  margin: 1.25rem 0;
+  padding-left: 1.6rem;
+}
+
+.article-content ul {
+  list-style: disc;
+}
+
+.article-content ol {
+  list-style: decimal;
+}
+
+.article-content li {
+  margin: 0.55rem 0;
+  padding-left: 0.25rem;
+}
+
+.article-content blockquote {
+  margin: 2rem 0;
+  border-left: 4px solid var(--accent);
+  border-radius: 0 1rem 1rem 0;
+  background: color-mix(in srgb, var(--accent) 9%, var(--panel));
+  padding: 1.25rem 1.5rem;
+  font-size: 1.12rem;
+  font-weight: 600;
+}
+
+.article-content a {
+  color: var(--accent);
+  font-weight: 650;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.article-content figure {
+  margin: 2.25rem 0;
+}
+
+.article-content img {
+  display: block;
+  max-height: 700px;
+  width: 100%;
+  border-radius: 1.25rem;
+  object-fit: cover;
+}
+
+.article-content figcaption {
+  margin-top: 0.65rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.article-content pre {
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  border: 1px solid var(--stroke);
+  border-radius: 1rem;
+  background: #08101d;
+  padding: 1rem 1.2rem;
+  color: #d9e6f5;
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.article-content hr {
+  margin: 2.6rem 0;
+  border: 0;
+  border-top: 1px solid var(--stroke);
+}
+
+.article-content [data-callout] {
+  margin: 1.8rem 0;
+  border: 1px solid var(--stroke);
+  border-radius: 1.25rem;
+  padding: 1.25rem 1.4rem;
+  background: var(--panel);
+}
+
+.article-content [data-callout] > strong:first-child {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.92rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.article-content [data-callout="tip"] {
+  border-color: rgba(52, 211, 153, 0.38);
+  background: rgba(16, 185, 129, 0.09);
+}
+
+.article-content [data-callout="tip"] > strong:first-child {
+  color: #34d399;
+}
+
+.article-content [data-callout="important"] {
+  border-color: rgba(251, 191, 36, 0.4);
+  background: rgba(245, 158, 11, 0.09);
+}
+
+.article-content [data-callout="important"] > strong:first-child {
+  color: #fbbf24;
+}
+
+.article-content [data-callout="mistake"] {
+  border-color: rgba(248, 113, 113, 0.38);
+  background: rgba(239, 68, 68, 0.09);
+}
+
+.article-content [data-callout="mistake"] > strong:first-child {
+  color: #f87171;
+}
+
+.article-editor:empty::before {
+  content: "Начните писать статью...";
+  color: var(--muted2);
+}
+
+.article-editor:focus {
+  box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.18);
+}
+
+.article-editor [contenteditable="true"]:focus,
+.article-editor *:focus {
+  outline: none;
+}

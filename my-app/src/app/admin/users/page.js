@@ -14,7 +14,6 @@ import {
   UserX, 
   Trash2, 
   Search, 
-  Filter,
   Lock,
   Unlock,
   AlertCircle,
@@ -22,9 +21,9 @@ import {
 } from "lucide-react";
 
 const roleColors = {
-  admin: "bg-purple-500/20 text-purple-300 border-purple-500/30",
-  trainer: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
-  user: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+  admin: "bg-purple-500/20 text-[color:var(--warm)] border-purple-500/30",
+  trainer: "bg-cyan-500/20 text-[color:var(--secondary)] border-cyan-500/30",
+  user: "bg-[color:var(--accent-soft)] text-[color:var(--accent)] border-[color:var(--accent-border)]",
 };
 
 const roleNames = {
@@ -165,7 +164,7 @@ export default function UsersManagementPage() {
       <div className="space-y-6">
         {/* Заголовок и статистика */}
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white">Управление пользователями</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-[color:var(--text)]">Управление пользователями</h1>
           <p className="text-[color:var(--muted)] mt-1">
             Просмотр, блокировка и удаление пользователей
           </p>
@@ -180,51 +179,51 @@ export default function UsersManagementPage() {
                   <Users className="w-5 h-5 text-[color:var(--text)]" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-white">{stats.total}</p>
+                  <p className="text-2xl font-bold text-[color:var(--text)]">{stats.total}</p>
                   <p className="text-xs text-[color:var(--muted)]">Всего</p>
                 </div>
               </div>
             </Card>
             <Card hover={false} className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                  <Shield className="w-5 h-5 text-purple-400" />
+                <div className="w-10 h-10 rounded-xl bg-[color:var(--warm-soft)] flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-[color:var(--warm)]" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-white">{stats.admins}</p>
+                  <p className="text-2xl font-bold text-[color:var(--text)]">{stats.admins}</p>
                   <p className="text-xs text-[color:var(--muted)]">Админы</p>
                 </div>
               </div>
             </Card>
             <Card hover={false} className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-                  <UserCheck className="w-5 h-5 text-cyan-400" />
+                <div className="w-10 h-10 rounded-xl bg-[color:var(--secondary-soft)] flex items-center justify-center">
+                  <UserCheck className="w-5 h-5 text-[color:var(--secondary)]" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-white">{stats.trainers}</p>
+                  <p className="text-2xl font-bold text-[color:var(--text)]">{stats.trainers}</p>
                   <p className="text-xs text-[color:var(--muted)]">Тренеры</p>
                 </div>
               </div>
             </Card>
             <Card hover={false} className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                  <Users className="w-5 h-5 text-emerald-400" />
+                <div className="w-10 h-10 rounded-xl bg-[color:var(--accent-soft)] flex items-center justify-center">
+                  <Users className="w-5 h-5 text-[color:var(--accent)]" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-white">{stats.users}</p>
+                  <p className="text-2xl font-bold text-[color:var(--text)]">{stats.users}</p>
                   <p className="text-xs text-[color:var(--muted)]">Клиенты</p>
                 </div>
               </div>
             </Card>
             <Card hover={false} className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
-                  <UserX className="w-5 h-5 text-red-400" />
+                <div className="w-10 h-10 rounded-xl bg-[color:var(--danger-soft)] flex items-center justify-center">
+                  <UserX className="w-5 h-5 text-[color:var(--danger)]" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-white">{stats.banned}</p>
+                  <p className="text-2xl font-bold text-[color:var(--text)]">{stats.banned}</p>
                   <p className="text-xs text-[color:var(--muted)]">Заблокированы</p>
                 </div>
               </div>
@@ -234,19 +233,19 @@ export default function UsersManagementPage() {
 
         {/* Уведомления */}
         {success && (
-          <Card hover={false} className="p-4 bg-emerald-500/10 border-emerald-500/30">
+          <Card hover={false} className="p-4 bg-[color:var(--accent-soft)] border-[color:var(--accent-border)]">
             <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-              <p className="text-emerald-300">{success}</p>
+              <CheckCircle2 className="w-5 h-5 text-[color:var(--accent)] flex-shrink-0" />
+              <p className="text-[color:var(--accent)]">{success}</p>
             </div>
           </Card>
         )}
 
         {error && (
-          <Card hover={false} className="p-4 bg-red-500/10 border-red-500/30">
+          <Card hover={false} className="p-4 bg-[color:var(--danger-soft)] border-[color:color-mix(in_srgb,var(--danger)_40%,var(--stroke))]">
             <div className="flex items-center gap-3">
-              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-              <p className="text-red-300">{error}</p>
+              <AlertCircle className="w-5 h-5 text-[color:var(--danger)] flex-shrink-0" />
+              <p className="text-[color:var(--danger)]">{error}</p>
             </div>
           </Card>
         )}
@@ -298,18 +297,18 @@ export default function UsersManagementPage() {
               <Card key={user.id} hover={false} className="p-4">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-4 flex-1">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold ${
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-[color:var(--text)] font-semibold ${
                       user.is_banned 
-                        ? "bg-red-500/20" 
+                        ? "bg-[color:var(--danger-soft)]" 
                         : "bg-gradient-to-br from-emerald-500 to-cyan-500"
                     }`}>
                       {user.name?.charAt(0)?.toUpperCase() || "U"}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-white">{user.name}</span>
+                        <span className="font-semibold text-[color:var(--text)]">{user.name}</span>
                         {user.is_banned && (
-                          <Badge className="bg-red-500/20 text-red-300 border-red-500/30">
+                          <Badge className="bg-[color:var(--danger-soft)] text-[color:var(--danger)] border-[color:color-mix(in_srgb,var(--danger)_40%,var(--stroke))]">
                             Заблокирован
                           </Badge>
                         )}
@@ -324,7 +323,7 @@ export default function UsersManagementPage() {
                         {user.is_banned && user.banned_until && (
                           <>
                             <span>•</span>
-                            <span className="text-red-400">
+                            <span className="text-[color:var(--danger)]">
                               до {formatBanUntil(user.banned_until)}
                             </span>
                           </>
@@ -339,7 +338,7 @@ export default function UsersManagementPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleUnban(user.id)}
-                        className="text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10"
+                        className="text-[color:var(--accent)] border-[color:var(--accent-border)] hover:bg-[color:var(--accent-soft)]"
                       >
                         <Unlock className="w-4 h-4" />
                       </Button>
@@ -348,7 +347,7 @@ export default function UsersManagementPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => openBanModal(user)}
-                        className="text-red-400 border-red-500/30 hover:bg-red-500/10"
+                        className="text-[color:var(--danger)] border-[color:color-mix(in_srgb,var(--danger)_40%,var(--stroke))] hover:bg-[color:var(--danger-soft)]"
                       >
                         <Lock className="w-4 h-4" />
                       </Button>
@@ -359,7 +358,7 @@ export default function UsersManagementPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleDelete(user.id)}
-                        className="text-red-400 border-red-500/30 hover:bg-red-500/10"
+                        className="text-[color:var(--danger)] border-[color:color-mix(in_srgb,var(--danger)_40%,var(--stroke))] hover:bg-[color:var(--danger-soft)]"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -403,7 +402,7 @@ export default function UsersManagementPage() {
       {showBanModal && selectedUser && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50">
           <Card hover={false} className="w-full max-w-md p-6">
-            <h3 className="text-xl font-bold text-white mb-4">
+            <h3 className="text-xl font-bold text-[color:var(--text)] mb-4">
               Заблокировать пользователя
             </h3>
             
@@ -412,7 +411,7 @@ export default function UsersManagementPage() {
                 <p className="text-sm text-[color:var(--muted)] mb-1">
                   Пользователь:
                 </p>
-                <p className="text-white font-medium">{selectedUser.name}</p>
+                <p className="text-[color:var(--text)] font-medium">{selectedUser.name}</p>
                 <p className="text-sm text-[color:var(--muted)]">{selectedUser.email}</p>
               </div>
 

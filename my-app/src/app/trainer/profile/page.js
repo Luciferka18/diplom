@@ -9,7 +9,7 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import {
-  User, Phone, Mail, Instagram, Award, Calendar, Clock, MapPin,
+  User, Phone, Mail, Award, Calendar, Clock, MapPin,
   Save, Upload, AlertCircle, CheckCircle2
 } from "lucide-react";
 
@@ -19,8 +19,23 @@ const LOCATIONS = [
   { id: 2, name: "НашФит Север" },
 ];
 
+function timeHHMM(value) {
+  return String(value || "").slice(0, 5);
+}
+
+function normalizeSchedule(schedule) {
+  return {
+    ...schedule,
+    day_of_week: Number(schedule.day_of_week),
+    start_time: timeHHMM(schedule.start_time || "09:00"),
+    end_time: timeHHMM(schedule.end_time || "18:00"),
+    location_id: schedule.location_id ? Number(schedule.location_id) : null,
+    slot_duration_minutes: Number(schedule.slot_duration_minutes || 60),
+  };
+}
+
 export default function TrainerProfilePage() {
-  const { user, isAuthed, isTrainer } = useAuth();
+  const { user, loading: authLoading, isAuthed, isTrainer } = useAuth();
   const router = useRouter();
 
   const [profile, setProfile] = useState(null);
@@ -43,15 +58,20 @@ export default function TrainerProfilePage() {
 
   // Расписание
   const [schedules, setSchedules] = useState([]);
+  const [locations, setLocations] = useState(LOCATIONS);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!isAuthed) { router.replace("/login?next=/trainer/profile"); return; }
     if (!isTrainer) { router.replace("/account"); return; }
 
     let alive = true;
     (async () => {
       try {
-        const response = await apiGet("/trainer/profile");
+        const [response, locationResponse] = await Promise.all([
+          apiGet("/trainer/profile"),
+          apiGet("/locations").catch(() => ({ data: LOCATIONS })),
+        ]);
         const data = response?.data ?? response;
         if (!alive) return;
         if (!data || !data.id) {
@@ -69,7 +89,9 @@ export default function TrainerProfilePage() {
           phone: data.phone || "",
         });
         setPhotoPreview(data.photo_url || "");
-        setSchedules(data.schedules || []);
+        setSchedules((data.schedules || []).map(normalizeSchedule));
+        const loadedLocations = locationResponse?.data ?? locationResponse;
+        if (Array.isArray(loadedLocations) && loadedLocations.length) setLocations(loadedLocations);
       } catch {
         if (!alive) return;
         setError("Ошибка загрузки профиля. Убедитесь, что у вас есть профиль тренера.");
@@ -78,7 +100,7 @@ export default function TrainerProfilePage() {
       }
     })();
     return () => { alive = false; };
-  }, [isAuthed, isTrainer, router]);
+  }, [authLoading, isAuthed, isTrainer, router]);
 
   const updateField = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -99,7 +121,7 @@ export default function TrainerProfilePage() {
       if (existing) {
         return prev.map(s => s.day_of_week === dayOfWeek ? { ...s, [field]: value } : s);
       }
-      return [...prev, { day_of_week: dayOfWeek, start_time: "09:00", end_time: "18:00", location_id: null, slot_duration_minutes: 60, [field]: value }];
+      return [...prev, normalizeSchedule({ day_of_week: dayOfWeek, start_time: "09:00", end_time: "18:00", location_id: null, slot_duration_minutes: 60, [field]: value })];
     });
   };
 
@@ -107,7 +129,7 @@ export default function TrainerProfilePage() {
     setSchedules(prev => {
       const exists = prev.find(s => s.day_of_week === dayOfWeek);
       if (exists) return prev.filter(s => s.day_of_week !== dayOfWeek);
-      return [...prev, { day_of_week: dayOfWeek, start_time: "09:00", end_time: "18:00", location_id: null, slot_duration_minutes: 60 }];
+      return [...prev, normalizeSchedule({ day_of_week: dayOfWeek, start_time: "09:00", end_time: "18:00", location_id: null, slot_duration_minutes: 60 })];
     });
   };
 
@@ -145,11 +167,11 @@ export default function TrainerProfilePage() {
     try {
       const payload = {
         schedules: schedules.map(s => ({
-          day_of_week: s.day_of_week,
-          start_time: s.start_time,
-          end_time: s.end_time,
-          location_id: s.location_id || null,
-          slot_duration_minutes: s.slot_duration_minutes || 60,
+          day_of_week: Number(s.day_of_week),
+          start_time: timeHHMM(s.start_time),
+          end_time: timeHHMM(s.end_time),
+          location_id: s.location_id ? Number(s.location_id) : null,
+          slot_duration_minutes: Number(s.slot_duration_minutes || 60),
         })),
       };
 
@@ -159,7 +181,7 @@ export default function TrainerProfilePage() {
       // Перезагружаем профиль
       const response = await apiGet("/trainer/profile");
       const data = response?.data ?? response;
-      setSchedules(data.schedules || []);
+      setSchedules((data.schedules || []).map(normalizeSchedule));
     } catch (e) {
       setError(e?.data?.message || "Ошибка сохранения расписания");
     } finally {
@@ -167,7 +189,7 @@ export default function TrainerProfilePage() {
     }
   };
 
-  if (loading) return <Section><div className="py-20 text-center text-[color:var(--muted)]">Загрузка...</div></Section>;
+  if (authLoading || loading) return <Section><div className="py-20 text-center text-[color:var(--muted)]">Загрузка...</div></Section>;
 
   return (
     <Section title="Мой профиль тренера" subtitle="Редактируйте информацию и расписание">
@@ -247,10 +269,10 @@ export default function TrainerProfilePage() {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-[color:var(--text)] mb-1 block">VK / Соцсеть</label>
+              <label className="text-sm font-medium text-[color:var(--text)] mb-1 block">ВКонтакте</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[color:var(--muted)]" />
-                <Input placeholder="@username" value={form.instagram} onChange={e => updateField("instagram", e.target.value)} className="pl-10" />
+                <Input placeholder="@nashfit_trainer" value={form.instagram} onChange={e => updateField("instagram", e.target.value)} className="pl-10" />
               </div>
             </div>
 
@@ -322,8 +344,8 @@ export default function TrainerProfilePage() {
                           onChange={e => updateSchedule(dayOfWeek, "location_id", e.target.value ? Number(e.target.value) : null)}
                           className="w-full rounded-lg border border-[color:var(--stroke)] bg-[color:var(--bg)] px-2 py-1.5 text-sm text-[color:var(--text)] focus:outline-none focus:ring-1 focus:ring-[color:var(--accent)]"
                         >
-                          <option value="">Не выбран</option>
-                          {LOCATIONS.map(loc => (
+                          <option value="">Выберите зал</option>
+                          {locations.map(loc => (
                             <option key={loc.id} value={loc.id}>{loc.name}</option>
                           ))}
                         </select>

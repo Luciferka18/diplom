@@ -35,13 +35,13 @@ export default function ForgotPasswordPage() {
 
   if (success) {
     return (
-      <Container size="narrow" className="py-12 min-h-[80vh] flex items-center">
+      <Container size="narrow" className="py-10 sm:py-14 min-h-[76vh] flex items-center">
         <div className="w-full max-w-md mx-auto">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 mb-4">
-              <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[color:var(--accent-soft)] border border-[color:var(--accent-border)] mb-4">
+              <CheckCircle2 className="w-8 h-8 text-[color:var(--accent)]" />
             </div>
-            <h1 className="text-3xl font-bold text-white">Письмо отправлено</h1>
+            <h1 className="text-3xl font-black tracking-[-0.045em] text-[color:var(--text)]">Письмо отправлено</h1>
             <p className="text-[color:var(--muted)] mt-2">
               Следуйте инструкциям в письме для сброса пароля
             </p>
@@ -49,8 +49,8 @@ export default function ForgotPasswordPage() {
 
           <Card className="w-full p-6 md:p-8" hover={false}>
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
-                <p className="text-sm text-emerald-300">
+              <div className="p-4 rounded-xl bg-[color:var(--accent-soft)] border border-[color:var(--accent-border)]">
+                <p className="text-sm text-[color:var(--accent)]">
                   ✅ Запрос на сброс пароля отправлен на <strong>{email}</strong>
                 </p>
               </div>
@@ -87,13 +87,13 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <Container size="narrow" className="py-12 min-h-[80vh] flex items-center">
+    <Container size="narrow" className="py-10 sm:py-14 min-h-[76vh] flex items-center">
       <div className="w-full max-w-md mx-auto">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 mb-4">
-            <Mail className="w-8 h-8 text-emerald-400" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[color:var(--accent-soft)] border border-[color:var(--accent-border)] mb-4">
+            <Mail className="w-8 h-8 text-[color:var(--accent)]" />
           </div>
-          <h1 className="text-3xl font-bold text-white">Забыли пароль?</h1>
+          <h1 className="text-3xl font-black tracking-[-0.045em] text-[color:var(--text)]">Забыли пароль?</h1>
           <p className="text-[color:var(--muted)] mt-2">
             Введите email и мы отправим инструкцию по сбросу
           </p>
@@ -120,7 +120,7 @@ export default function ForgotPasswordPage() {
             </div>
 
             {error && (
-              <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300 flex items-start gap-2">
+              <div className="rounded-xl border border-[color:color-mix(in_srgb,var(--danger)_40%,var(--stroke))] bg-[color:var(--danger-soft)] p-3 text-sm text-[color:var(--danger)] flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                 {error}
               </div>

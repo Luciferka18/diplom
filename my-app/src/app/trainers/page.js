@@ -3,23 +3,72 @@ import Link from "next/link";
 import Section from "@/components/ui/Section";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
-import { Star } from "lucide-react";
+import { Calendar, Clock, MapPin, Star } from "lucide-react";
+
+function normalizeList(response) {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.data)) return response.data;
+  return [];
+}
 
 function Stars({ value = 0, size = "sm" }) {
   const v = Math.max(0, Math.min(5, Math.round(Number(value) || 0)));
   const sizeClass = size === "lg" ? "w-5 h-5" : "w-4 h-4";
+
   return (
     <div className="inline-flex gap-0.5" aria-label={`Оценка: ${v} из 5`}>
       {[1, 2, 3, 4, 5].map((star) => (
         <Star
           key={star}
           className={`${sizeClass} ${
-            star <= v
-              ? "fill-yellow-400 text-yellow-400"
-              : "text-[color:var(--stroke)]"
+            star <= v ? "fill-yellow-400 text-[color:var(--warning)]" : "text-[color:var(--stroke)]"
           }`}
         />
       ))}
+    </div>
+  );
+}
+
+function formatTime(value) {
+  return String(value || "").slice(0, 5);
+}
+
+function schedulePreview(schedules = []) {
+  const list = Array.isArray(schedules) ? schedules : [];
+
+  if (list.length === 0) {
+    return <div className="text-xs text-[color:var(--muted)]">Расписание пока не заполнено</div>;
+  }
+
+  return (
+    <div className="space-y-2">
+      {list.slice(0, 3).map((schedule) => (
+        <div
+          key={schedule.id}
+          className="rounded-lg border border-[color:var(--stroke)] bg-[color:var(--panel)] px-3 py-2 text-xs"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="flex items-center gap-1 font-semibold text-[color:var(--text)]">
+              <Calendar className="h-3.5 w-3.5 text-[color:var(--accent)]" />
+              {schedule.day_name || `День ${schedule.day_of_week}`}
+            </span>
+            <span className="flex items-center gap-1 text-[color:var(--muted)]">
+              <Clock className="h-3.5 w-3.5" />
+              {formatTime(schedule.start_time)} — {formatTime(schedule.end_time)}
+            </span>
+          </div>
+          {schedule.location_name ? (
+            <div className="mt-1 flex items-center gap-1 text-[color:var(--muted)]">
+              <MapPin className="h-3.5 w-3.5" />
+              {schedule.location_name}
+            </div>
+          ) : null}
+        </div>
+      ))}
+
+      {list.length > 3 ? (
+        <div className="text-xs text-[color:var(--muted)]">Ещё {list.length - 3} дн.</div>
+      ) : null}
     </div>
   );
 }
@@ -29,30 +78,29 @@ export default async function TrainersPage() {
 
   try {
     const response = await apiGet("/trainers");
-    trainers = Array.isArray(response) ? response : (response?.data ?? []);
-  } catch (e) {
-    console.error("[trainers] failed to load list", e);
+    trainers = normalizeList(response);
+  } catch (error) {
+    console.error("[trainers] failed to load list", error);
     trainers = [];
   }
 
   return (
     <Section
       title="Наши тренеры"
-      subtitle="Профессионалы, которые приведут тебя к результату"
+      subtitle="Выбери тренера, посмотри расписание и запишись на удобное время"
     >
       {trainers.length === 0 ? (
         <Card>Тренеры не найдены</Card>
       ) : (
         <ul className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {trainers.map((t) => (
-            <li key={t.id}>
+          {trainers.map((trainer) => (
+            <li key={trainer.id}>
               <Card className="h-full flex flex-col" hover={false}>
-                {/* Фото */}
                 <div className="relative w-full aspect-[3/4] overflow-hidden rounded-xl bg-[color:var(--panel)] border border-[color:var(--stroke)]">
-                  {t.photo_url ? (
+                  {trainer.photo_url ? (
                     <img
-                      src={t.photo_url}
-                      alt={t.name}
+                      src={trainer.photo_url}
+                      alt={trainer.name}
                       className="h-full w-full object-cover"
                     />
                   ) : (
@@ -64,35 +112,43 @@ export default async function TrainersPage() {
                   )}
                 </div>
 
-                {/* Информация */}
                 <div className="mt-4 flex-1">
-                  <div className="font-bold text-lg text-[color:var(--text)]">{t.name}</div>
-                  <div className="text-sm text-[color:var(--accent)] mt-1">{t.specialization || "Персональный тренер"}</div>
-
-                  <div className="mt-3 flex items-center gap-2 text-sm text-[color:var(--muted)]">
-                    <span>{t.experience_years} {t.experience_years === 1 ? "год" : t.experience_years >= 2 && t.experience_years <= 4 ? "года" : "лет"} опыта</span>
-                    {t.age && <span>· {t.age} лет</span>}
+                  <div className="font-bold text-lg text-[color:var(--text)]">{trainer.name}</div>
+                  <div className="text-sm text-[color:var(--accent)] mt-1">
+                    {trainer.specialization || "Персональный тренер"}
                   </div>
 
-                  {/* Рейтинг */}
-                  {t.reviews_count > 0 && (
-                    <div className="mt-3 flex items-center gap-2">
-                      <Stars value={t.avg_rating} />
-                      <span className="text-sm font-semibold text-[color:var(--text)]">{t.avg_rating}</span>
-                      <span className="text-xs text-[color:var(--muted)]">({t.reviews_count} {t.reviews_count === 1 ? "отзыв" : t.reviews_count >= 2 && t.reviews_count <= 4 ? "отзыва" : "отзывов"})</span>
-                    </div>
-                  )}
+                  <div className="mt-3 flex items-center gap-2 text-sm text-[color:var(--muted)]">
+                    <span>{trainer.experience_years || 0} лет опыта</span>
+                    {trainer.age ? <span>· {trainer.age} лет</span> : null}
+                  </div>
 
-                  {/* Краткое био */}
-                  {t.bio && (
-                    <p className="mt-3 text-sm text-[color:var(--muted)] line-clamp-3">{t.bio}</p>
-                  )}
+                  {trainer.reviews_count > 0 ? (
+                    <div className="mt-3 flex items-center gap-2">
+                      <Stars value={trainer.avg_rating} />
+                      <span className="text-sm font-semibold text-[color:var(--text)]">{trainer.avg_rating}</span>
+                      <span className="text-xs text-[color:var(--muted)]">({trainer.reviews_count})</span>
+                    </div>
+                  ) : null}
+
+                  {trainer.bio ? (
+                    <p className="mt-3 text-sm text-[color:var(--muted)] line-clamp-3">{trainer.bio}</p>
+                  ) : null}
+
+                  <div className="mt-4">
+                    <div className="mb-2 text-xs font-bold uppercase tracking-wider text-[color:var(--muted)]">
+                      Ближайшее расписание
+                    </div>
+                    {schedulePreview(trainer.schedules)}
+                  </div>
                 </div>
 
-                {/* Кнопка */}
-                <div className="mt-4">
-                  <Button as={Link} href={`/trainers/${t.id}`} variant="outline" className="w-full">
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <Button as={Link} href={`/trainers/${trainer.id}`} variant="outline" className="w-full">
                     Подробнее
+                  </Button>
+                  <Button as={Link} href={`/booking?trainerId=${trainer.id}`} variant="primary" className="w-full">
+                    Записаться
                   </Button>
                 </div>
               </Card>

@@ -149,10 +149,10 @@ export default function RegisterPage() {
       <div className="w-full max-w-lg mx-auto">
         {/* Заголовок */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 mb-4">
-            <UserPlus className="w-8 h-8 text-emerald-400" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[color:var(--accent-soft)] border border-[color:var(--accent-border)] mb-4">
+            <UserPlus className="w-8 h-8 text-[color:var(--accent)]" />
           </div>
-          <h1 className="text-3xl font-bold text-white">Создание аккаунта</h1>
+          <h1 className="text-3xl font-black tracking-[-0.045em] text-[color:var(--text)]">Создание аккаунта</h1>
           <p className="text-[color:var(--muted)] mt-2">Присоединяйтесь к НашФит</p>
         </div>
 
@@ -164,7 +164,7 @@ export default function RegisterPage() {
                 <div
                   className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold transition-all ${
                     currentStep >= step.id
-                      ? "bg-emerald-500 text-white"
+                      ? "bg-[color:var(--accent)] text-white"
                       : "bg-[color:var(--stroke)] text-[color:var(--muted)]"
                   }`}
                 >
@@ -173,7 +173,7 @@ export default function RegisterPage() {
                 {index < STEPS.length - 1 && (
                   <div
                     className={`w-16 md:w-24 h-0.5 mx-2 ${
-                      currentStep > step.id ? "bg-emerald-500" : "bg-[color:var(--stroke)]"
+                      currentStep > step.id ? "bg-[color:var(--accent)]" : "bg-[color:var(--stroke)]"
                     }`}
                   />
                 )}
@@ -185,7 +185,7 @@ export default function RegisterPage() {
               <span
                 key={step.id}
                 className={`text-center w-20 ${
-                  currentStep === step.id ? "text-emerald-400 font-medium" : ""
+                  currentStep === step.id ? "text-[color:var(--accent)] font-medium" : ""
                 }`}
               >
                 {step.title}
@@ -212,7 +212,7 @@ export default function RegisterPage() {
                       autoComplete="username"
                     />
                   </div>
-                  {errors.login && <p className="text-xs text-red-400">{errors.login}</p>}
+                  {errors.login && <p className="text-xs text-[color:var(--danger)]">{errors.login}</p>}
                 </div>
 
                 <div className="space-y-1.5">
@@ -229,7 +229,7 @@ export default function RegisterPage() {
                       autoComplete="new-password"
                     />
                   </div>
-                  {errors.password && <p className="text-xs text-red-400">{errors.password}</p>}
+                  {errors.password && <p className="text-xs text-[color:var(--danger)]">{errors.password}</p>}
                 </div>
 
                 <div className="space-y-1.5">
@@ -246,7 +246,7 @@ export default function RegisterPage() {
                     />
                   </div>
                   {errors.password_confirmation && (
-                    <p className="text-xs text-red-400">{errors.password_confirmation}</p>
+                    <p className="text-xs text-[color:var(--danger)]">{errors.password_confirmation}</p>
                   )}
                 </div>
               </div>
@@ -268,11 +268,11 @@ export default function RegisterPage() {
                       autoComplete="name"
                     />
                   </div>
-                  {errors.name && <p className="text-xs text-red-400">{errors.name}</p>}
+                  {errors.name && <p className="text-xs text-[color:var(--danger)]">{errors.name}</p>}
                 </div>
 
-                <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                  <p className="text-xs text-emerald-300">
+                <div className="p-4 rounded-xl bg-[color:var(--accent-soft)] border border-[color:var(--accent-border)]">
+                  <p className="text-xs text-[color:var(--accent)]">
                     💡 Используйте своё реальное имя — это поможет при общении с тренерами и при получении заказов
                   </p>
                 </div>
@@ -294,7 +294,7 @@ export default function RegisterPage() {
                       autoComplete="tel"
                     />
                   </div>
-                  {errors.phone && <p className="text-xs text-red-400">{errors.phone}</p>}
+                  {errors.phone && <p className="text-xs text-[color:var(--danger)]">{errors.phone}</p>}
                 </div>
 
                 <div className="space-y-1.5">
@@ -310,11 +310,11 @@ export default function RegisterPage() {
                       autoComplete="email"
                     />
                   </div>
-                  {errors.email && <p className="text-xs text-red-400">{errors.email}</p>}
+                  {errors.email && <p className="text-xs text-[color:var(--danger)]">{errors.email}</p>}
                 </div>
 
-                <div className="p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
-                  <p className="text-xs text-cyan-300">
+                <div className="p-4 rounded-xl bg-[color:var(--secondary-soft)] border border-[color:var(--secondary-border)]">
+                  <p className="text-xs text-[color:var(--secondary)]">
                     📧 На email придёт подтверждение регистрации и уведомления о заказах
                   </p>
                 </div>
@@ -323,7 +323,7 @@ export default function RegisterPage() {
 
             {/* Общая ошибка */}
             {error && (
-              <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+              <div className="mt-4 rounded-xl border border-[color:color-mix(in_srgb,var(--danger)_40%,var(--stroke))] bg-[color:var(--danger-soft)] p-3 text-sm text-[color:var(--danger)]">
                 {error}
               </div>
             )}
@@ -381,7 +381,7 @@ export default function RegisterPage() {
         {/* Ссылка на вход */}
         <p className="mt-6 text-center text-sm text-[color:var(--muted)]">
           Уже есть аккаунт?{" "}
-          <a href="/login" className="text-emerald-400 font-semibold hover:text-emerald-300 transition-colors">
+          <a href="/login" className="text-[color:var(--accent)] font-semibold hover:text-[color:var(--accent-hover)] transition-colors">
             Войти
           </a>
         </p>
