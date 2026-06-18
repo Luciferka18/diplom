@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { apiGet, apiPost, apiPut } from "@/services/api";
+import TrainerServicesEditor from "@/components/trainers/TrainerServicesEditor";
 import { useAuth } from "@/context/AuthContext";
 import Section from "@/components/ui/Section";
 import Card from "@/components/ui/Card";
@@ -376,6 +377,15 @@ export default function TrainerProfilePage() {
             {saving ? "Сохранение..." : "Сохранить расписание"}
           </Button>
         </Card>
+      </div>
+
+      <div className="mt-8">
+        <TrainerServicesEditor
+          loadPath="/trainer/services"
+          savePath="/trainer/services"
+          title="Мои услуги"
+          subtitle="Отметьте активные форматы занятий, цены и длительность. Эти услуги сразу появятся на странице записи."
+        />
       </div>
     </Section>
   );

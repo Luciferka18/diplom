@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { apiPost } from "@/services/api";
 import Container from "@/components/ui/Container";
 import Card from "@/components/ui/Card";
@@ -9,11 +10,22 @@ import Button from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Shield, AlertCircle, CheckCircle2, Key } from "lucide-react";
 
+function safeNextUrl(value) {
+  const fallback = "/account";
+  const raw = String(value || fallback).trim();
+
+  if (!raw.startsWith("/") || raw.startsWith("//")) return fallback;
+  if (raw.startsWith("/login") || raw.startsWith("/2fa")) return fallback;
+
+  return raw;
+}
+
 function TwoFactorForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+  const { completeLogin } = useAuth();
   const [userId, setUserId] = useState("");
+  const [nextUrl, setNextUrl] = useState("/account");
   const [code, setCode] = useState("");
   const [useRecovery, setUseRecovery] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -23,48 +35,70 @@ function TwoFactorForm() {
   useEffect(() => {
     const uid = searchParams.get("uid");
     const requires2fa = searchParams.get("2fa");
-    
+    const next = safeNextUrl(searchParams.get("next"));
+
     if (requires2fa !== "true" || !uid) {
       router.replace("/login");
       return;
     }
-    
+
     setUserId(uid);
+    setNextUrl(next);
   }, [searchParams, router]);
+
+  const finishLogin = (user, token) => {
+    completeLogin?.(user, token);
+
+    localStorage.setItem("nashfit_token", token);
+    localStorage.setItem("nashfit_user", JSON.stringify(user));
+    localStorage.setItem("user", JSON.stringify(user));
+    window.dispatchEvent(new Event("nashfit:auth-changed"));
+
+    // Hard navigation is intentional: it remounts AccountLayout/AuthProvider,
+    // so protected pages no longer see the old unauthenticated state after 2FA.
+    window.setTimeout(() => {
+      window.location.replace(safeNextUrl(nextUrl));
+    }, 250);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setBusy(true);
+    setSuccess("");
 
-    const codeToVerify = code.replace(/\s/g, "").toUpperCase();
+    const codeToVerify = useRecovery
+      ? code.toUpperCase().replace(/[^A-Z0-9]/g, "")
+      : code.replace(/\D/g, "");
 
     if (!codeToVerify) {
-      setError("Введите код");
-      setBusy(false);
+      setError("Введите код.");
       return;
     }
 
+    if (!useRecovery && codeToVerify.length !== 6) {
+      setError("Код из приложения должен состоять из 6 цифр.");
+      return;
+    }
+
+    setBusy(true);
+
     try {
       const data = await apiPost("/auth/2fa/verify", {
-        user_id: parseInt(userId),
+        user_id: Number(userId),
         code: codeToVerify,
       });
 
-      if (data.token) {
-        localStorage.setItem("nashfit_token", data.token);
-        if (data.user) {
-          localStorage.setItem("nashfit_user", JSON.stringify(data.user));
-        }
-        
-        setSuccess("Вход выполнен! Перенаправление...");
-        setTimeout(() => {
-          router.replace("/account");
-        }, 1000);
+      const token = data?.token ?? data?.data?.token ?? null;
+      const user = data?.user ?? data?.data?.user ?? null;
+
+      if (!token || !user) {
+        throw new Error("Сервер вернул неполный ответ.");
       }
-    } catch (e) {
-      setError(e?.data?.message || "Неверный код");
-    } finally {
+
+      setSuccess(data?.message || "Вход выполнен. Открываем кабинет...");
+      finishLogin(user, token);
+    } catch (err) {
+      setError(err?.data?.message || err?.message || "Неверный код.");
       setBusy(false);
     }
   };
@@ -86,12 +120,9 @@ function TwoFactorForm() {
               placeholder={useRecovery ? "XXXXXXXX" : "000000"}
               value={code}
               onChange={(e) => {
-                let value = e.target.value;
-                if (!useRecovery) {
-                  value = value.replace(/\D/g, "").slice(0, 6);
-                } else {
-                  value = value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
-                }
+                const value = useRecovery
+                  ? e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8)
+                  : e.target.value.replace(/\D/g, "").slice(0, 6);
                 setCode(value);
               }}
               disabled={busy}
@@ -116,63 +147,39 @@ function TwoFactorForm() {
           </div>
         )}
 
-        <Button type="submit" disabled={busy} className="w-full h-12 text-base">
-          {busy ? (
-            <span className="flex items-center gap-2">
-              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              Проверка...
-            </span>
-          ) : (
-            "Подтвердить"
-          )}
+        <Button type="submit" disabled={busy || !userId} className="w-full h-12 text-base">
+          {busy ? "Проверка..." : "Подтвердить"}
         </Button>
 
         <div className="text-center">
           <button
             type="button"
             onClick={() => {
-              setUseRecovery(!useRecovery);
+              setUseRecovery((v) => !v);
               setCode("");
               setError("");
+              setSuccess("");
             }}
             className="text-sm text-[color:var(--accent)] hover:text-[color:var(--accent-hover)] transition-colors"
           >
-            {useRecovery 
-              ? "Использовать код из приложения" 
-              : "Использовать код восстановления"}
+            {useRecovery ? "Использовать код из приложения" : "Использовать код восстановления"}
           </button>
         </div>
 
         <div className="text-center">
-          <a
-            href="/login"
-            className="text-sm text-[color:var(--muted)] hover:text-[color:var(--text)] transition-colors"
-          >
+          <a href="/login" className="text-sm text-[color:var(--muted)] hover:text-[color:var(--text)] transition-colors">
             ← Вернуться ко входу
           </a>
         </div>
       </form>
 
-      {!useRecovery && (
-        <div className="mt-6 p-4 rounded-xl bg-[color:var(--panel)] border border-[color:var(--stroke)]">
-          <p className="text-xs text-[color:var(--muted)] text-center">
-            Откройте приложение Google Authenticator, Authy или другое совместимое приложение
-            и введите 6-значный код для вашего аккаунта НашФит
-          </p>
-        </div>
-      )}
-
-      {useRecovery && (
-        <div className="mt-6 p-4 rounded-xl bg-[color:var(--warning-soft)] border border-[color:color-mix(in_srgb,var(--warning)_40%,var(--stroke))]">
-          <p className="text-xs text-[color:var(--warning)] text-center">
-            Введите один из кодов восстановления, которые вы сохранили при настройке 2FA.
-            Каждый код можно использовать только один раз.
-          </p>
-        </div>
-      )}
+      <div className="mt-6 p-4 rounded-xl bg-[color:var(--panel)] border border-[color:var(--stroke)]">
+        <p className="text-xs text-[color:var(--muted)] text-center">
+          {useRecovery
+            ? "Введите один из одноразовых кодов восстановления. После входа код будет удалён."
+            : "Откройте Google Authenticator, Authy или другое приложение и введите 6-значный код."}
+        </p>
+      </div>
     </Card>
   );
 }
@@ -186,21 +193,10 @@ export default function TwoFactorPage() {
             <Shield className="w-8 h-8 text-[color:var(--accent)]" />
           </div>
           <h1 className="text-3xl font-black tracking-[-0.045em] text-[color:var(--text)]">Двухфакторная аутентификация</h1>
-          <p className="text-[color:var(--muted)] mt-2">
-            Введите код для продолжения
-          </p>
+          <p className="text-[color:var(--muted)] mt-2">Введите код для продолжения</p>
         </div>
 
-        <Suspense fallback={
-          <Card className="w-full p-6 md:p-8" hover={false}>
-            <div className="flex items-center justify-center py-8">
-              <svg className="animate-spin h-6 w-6 text-[color:var(--accent)]" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-            </div>
-          </Card>
-        }>
+        <Suspense fallback={<Card className="w-full p-6 md:p-8" hover={false}>Загрузка...</Card>}>
           <TwoFactorForm />
         </Suspense>
       </div>

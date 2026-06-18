@@ -18,6 +18,20 @@ class ActivityService
         $userId = $user instanceof User ? $user->id : $user;
         if (!$userId) return null;
 
+        $existing = $this->findExistingNotification($userId, $type, $data);
+        if ($existing) {
+            $existing->fill([
+                'actor_id' => $actorId,
+                'title' => $title,
+                'body' => $body,
+                'action_url' => $url,
+                'icon' => $icon,
+                'data' => array_merge($existing->data ?: [], $data),
+            ])->save();
+
+            return $existing->fresh();
+        }
+
         $notification = UserNotification::create([
             'user_id' => $userId,
             'actor_id' => $actorId,
@@ -49,6 +63,10 @@ class ActivityService
 
         User::query()->where('role', 'admin')->select('id')->chunkById(100, function ($admins) use ($type, $title, $body, $url, $subject, $data, $actorId, $icon) {
             foreach ($admins as $admin) {
+                if ($actorId && (int) $admin->id === (int) $actorId) {
+                    continue;
+                }
+
                 $this->notifyUser($admin->id, $type, $title, $body, $url, $subject, $data, $actorId, $icon);
             }
         });
@@ -64,6 +82,18 @@ class ActivityService
         $subjectType = $subject ? $subject::class : User::class;
         $subjectId = $subject?->getKey() ?: ($userId ?: 0);
 
+        if ($existing = $this->findExistingEvent($userId, $audience, $type, $subjectType, $subjectId, $data)) {
+            $existing->fill([
+                'actor_id' => $actorId,
+                'title' => $title,
+                'body' => $body,
+                'action_url' => $url,
+                'data' => array_merge($existing->data ?: [], $data),
+            ])->save();
+
+            return $existing->fresh();
+        }
+
         return ActivityEvent::create([
             'user_id' => $userId,
             'actor_id' => $actorId,
@@ -76,5 +106,65 @@ class ActivityService
             'subject_id' => $subjectId,
             'data' => $data,
         ]);
+    }
+
+    private function findExistingNotification(int $userId, string $type, array $data): ?UserNotification
+    {
+        $paymentId = $data['payment_id'] ?? null;
+        $orderId = $data['order_id'] ?? null;
+
+        if (!$paymentId && !$orderId) return null;
+
+        $query = UserNotification::query()
+            ->where('user_id', $userId)
+            ->whereIn('type', $this->relatedTypes($type));
+
+        if ($paymentId) {
+            $query->where('data->payment_id', $paymentId);
+        }
+
+        if ($orderId) {
+            $query->where('data->order_id', $orderId);
+        }
+
+        return $query->latest('id')->first();
+    }
+
+    private function findExistingEvent(User|int|null $userId, string $audience, string $type, string $subjectType, int|string $subjectId, array $data): ?ActivityEvent
+    {
+        $paymentId = $data['payment_id'] ?? null;
+        $orderId = $data['order_id'] ?? null;
+
+        if (!$paymentId && !$orderId) return null;
+
+        $query = ActivityEvent::query()
+            ->where('audience', $audience)
+            ->whereIn('type', $this->relatedTypes($type))
+            ->where('subject_type', $subjectType)
+            ->where('subject_id', $subjectId);
+
+        if ($userId) {
+            $query->where('user_id', $userId instanceof User ? $userId->id : $userId);
+        } else {
+            $query->whereNull('user_id');
+        }
+
+        if ($paymentId) {
+            $query->where('data->payment_id', $paymentId);
+        }
+
+        if ($orderId) {
+            $query->where('data->order_id', $orderId);
+        }
+
+        return $query->latest('id')->first();
+    }
+
+    private function relatedTypes(string $type): array
+    {
+        $normalized = preg_replace('/^admin\./', '', $type);
+        $types = [$type, $normalized, 'admin.' . $normalized];
+
+        return array_values(array_unique($types));
     }
 }

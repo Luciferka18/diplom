@@ -25,6 +25,7 @@ import {
 const MONTHS = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
 const WEEKDAYS = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
 const money = (v = 0) => new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 }).format(Number(v || 0) / 100);
+const serviceWord = (count) => { const n = Math.abs(Number(count || 0)) % 100; const n1 = n % 10; if (n > 10 && n < 20) return "услуг"; if (n1 > 1 && n1 < 5) return "услуги"; if (n1 === 1) return "услуга"; return "услуг"; };
 const pad = (value) => String(value).padStart(2, "0");
 const dateKey = (year, month, day) => `${year}-${pad(month + 1)}-${pad(day)}`;
 const monthKey = ({ year, month }) => `${year}-${pad(month + 1)}`;
@@ -289,17 +290,35 @@ function BookingPageContent() {
               </select>
               {trainer ? <div className="mt-4 flex items-center gap-4 rounded-2xl border border-[color:var(--stroke)] bg-[color:var(--bg)] p-4">{trainer.photo_url ? <img src={trainer.photo_url} alt="" className="h-16 w-16 rounded-2xl object-cover" /> : <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-400/10 text-cyan-300"><UserRound /></div>}<div><div className="font-bold text-[color:var(--text)]">{trainer.name}</div><div className="text-sm text-[color:var(--muted)]">{trainer.specialization}</div></div></div> : null}
 
-              <div className="mt-6 grid gap-3 md:grid-cols-2">
-                {servicesLoading ? <div className="col-span-full flex items-center gap-2 text-sm text-[color:var(--muted)]"><Loader2 className="h-4 w-4 animate-spin" /> Загружаем услуги…</div> : services.map((item) => {
-                  const active = String(form.trainer_service_id) === String(item.id);
-                  return <button key={item.id} type="button" onClick={() => change("trainer_service_id", String(item.id))} className={`relative rounded-2xl border p-4 text-left transition ${active ? "border-emerald-400 bg-emerald-400/10" : "border-[color:var(--stroke)] bg-[color:var(--bg)] hover:border-emerald-400/40"}`}>
-                    {active ? <Check className="absolute right-4 top-4 h-5 w-5 text-emerald-400" /> : null}
-                    {item.badge ? <span className="mb-2 inline-block rounded-full bg-cyan-400/10 px-2 py-1 text-[10px] font-bold uppercase text-cyan-300">{item.badge}</span> : null}
-                    <div className="pr-7 font-bold text-[color:var(--text)]">{item.name}</div>
-                    <p className="mt-2 text-xs leading-5 text-[color:var(--muted)]">{item.description}</p>
-                    <div className="mt-4 flex items-center justify-between text-sm"><span className="flex items-center gap-1 text-[color:var(--muted)]"><Clock3 className="h-4 w-4" /> {item.duration_minutes} мин</span><b className="text-emerald-400">{item.price ? money(item.price) : "Бесплатно"}</b></div>
-                  </button>;
-                })}
+              <div className="mt-6">
+                <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+                  <div>
+                    <h3 className="font-black text-[color:var(--text)]">Предоставляемые услуги</h3>
+                    <p className="text-sm text-[color:var(--muted)]">Выберите конкретный формат занятия у выбранного тренера.</p>
+                  </div>
+                  {trainer && !servicesLoading ? <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300">{services.length} {serviceWord(services.length)}</span> : null}
+                </div>
+
+                {servicesLoading ? (
+                  <div className="flex items-center gap-2 rounded-2xl border border-[color:var(--stroke)] bg-[color:var(--bg)] p-4 text-sm text-[color:var(--muted)]"><Loader2 className="h-4 w-4 animate-spin" /> Загружаем услуги…</div>
+                ) : services.length ? (
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {services.map((item) => {
+                      const active = String(form.trainer_service_id) === String(item.id);
+                      return <button key={item.id} type="button" onClick={() => change("trainer_service_id", String(item.id))} className={`relative rounded-2xl border p-4 text-left transition ${active ? "border-emerald-400 bg-emerald-400/10 shadow-[0_0_0_3px_rgba(52,211,153,0.12)]" : "border-[color:var(--stroke)] bg-[color:var(--bg)] hover:border-emerald-400/40"}`}>
+                        {active ? <Check className="absolute right-4 top-4 h-5 w-5 text-emerald-400" /> : null}
+                        {item.badge ? <span className="mb-2 inline-block rounded-full bg-cyan-400/10 px-2 py-1 text-[10px] font-bold uppercase text-cyan-700 dark:text-cyan-300">{item.badge}</span> : null}
+                        <div className="pr-7 font-bold text-[color:var(--text)]">{item.name}</div>
+                        <p className="mt-2 text-xs leading-5 text-[color:var(--muted)]">{item.description || "Индивидуальный формат тренировки под вашу цель."}</p>
+                        <div className="mt-4 flex items-center justify-between text-sm"><span className="flex items-center gap-1 text-[color:var(--muted)]"><Clock3 className="h-4 w-4" /> {item.duration_minutes} мин</span><b className="text-emerald-600 dark:text-emerald-400">{item.price ? money(item.price) : "Бесплатно"}</b></div>
+                      </button>;
+                    })}
+                  </div>
+                ) : form.trainer_id ? (
+                  <div className="rounded-2xl border border-yellow-400/25 bg-yellow-400/10 p-4 text-sm text-yellow-700 dark:text-yellow-100">У выбранного тренера пока нет активных услуг. Тренер может включить услуги в своём кабинете, а администратор — через кнопку «Услуги» в админке.</div>
+                ) : (
+                  <div className="rounded-2xl border border-[color:var(--stroke)] bg-[color:var(--bg)] p-4 text-sm text-[color:var(--muted)]">Сначала выберите тренера — ниже появятся его услуги.</div>
+                )}
               </div>
             </section>
 

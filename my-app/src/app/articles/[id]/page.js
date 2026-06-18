@@ -32,8 +32,41 @@ function listFrom(response) {
   return [];
 }
 
+function normalizeKey(value) {
+  return String(value || "").toLowerCase().trim().replace(/ё/g, "е").replace(/й/g, "и").replace(/[^a-zа-я0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+function isBadImage(value) {
+  const path = String(value || "").toLowerCase();
+  return !path || path.includes("/demo/") || path.includes("placeholder") || path.includes("gradient") || path.endsWith(".svg");
+}
+
+const mediaImages = {
+  "kak-nachat-trenirovatsya-ponyatnyy-plan-dlya-novichka": "/seed-images/articles/kak-nachat-trenirovatsya.png",
+  "pitanie-dlya-nabora-myshechnoy-massy": "/seed-images/articles/pitanie-dlya-massy.png",
+  "yoga-dlya-nachinayushchikh-pervye-shagi": "/seed-images/articles/yoga-dlya-nachinayushchikh.png",
+  "5-oshibok-pri-pokhudenii": "/seed-images/articles/oshibki-pri-pokhudenii.png",
+  "vosstanovlenie-posle-trenirovki": "/seed-images/articles/vosstanovlenie-posle-trenirovki.png",
+  "kak-sostavit-plan-trenirovok-na-nedelyu": "/seed-images/articles/plan-trenirovok.png",
+  "chto-est-do-i-posle-trenirovki": "/seed-images/articles/pitanie-do-posle.png",
+  "mobilnost-i-rastyazhka-posle-sidyachego-dnya": "/seed-images/articles/mobilnost-rastyazhka.png",
+  "whey-protein-gold-standard": "/seed-images/products/whey-protein-gold-standard/main.png",
+  "casein-protein": "/seed-images/products/casein-protein/main.png",
+  "mass-gainer-pro": "/seed-images/products/mass-gainer-pro/main.png",
+  "bcaa-5000": "/seed-images/products/bcaa-5000/main.png",
+  "funktsionalnyy-start": "/seed-images/programs/funktsionalnyy-start.png",
+  "moshch-i-sila": "/seed-images/programs/moshch-i-sila.png",
+  "silovaya-baza": "/seed-images/programs/silovaya-baza.png",
+  "pokhudenie-za-8-nedel": "/seed-images/programs/pokhudenie-za-8-nedel.png"
+};
+const mediaPool = Object.values(mediaImages);
+
 function imageOf(item) {
-  return item?.cover_image_url || item?.image_url || item?.photo_url || item?.gallery?.[0] || null;
+  const keys = [item?.slug, item?.title, item?.name, item?.id].map(normalizeKey).filter(Boolean);
+  for (const key of keys) if (mediaImages[key]) return mediaImages[key];
+  const explicit = item?.cover_image_url || item?.image_url || item?.photo_url || item?.gallery?.[0] || null;
+  if (!isBadImage(explicit)) return explicit;
+  return mediaPool[Math.abs(Number(item?.id || 0)) % mediaPool.length];
 }
 
 function dateRu(value) {
@@ -51,6 +84,71 @@ function textContent(html) {
     .replace(/&nbsp;/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function markdownToHtml(value) {
+  const lines = String(value || "").split(/\r?\n/);
+  const html = [];
+  let paragraph = [];
+
+  function flushParagraph() {
+    if (paragraph.length) {
+      html.push(`<p>${paragraph.join(" ").trim()}</p>`);
+      paragraph = [];
+    }
+  }
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) {
+      flushParagraph();
+      continue;
+    }
+
+    if (line.startsWith("### ")) {
+      flushParagraph();
+      html.push(`<h3>${escapeHtml(line.slice(4))}</h3>`);
+      continue;
+    }
+
+    if (line.startsWith("## ")) {
+      flushParagraph();
+      html.push(`<h2>${escapeHtml(line.slice(3))}</h2>`);
+      continue;
+    }
+
+    if (line.startsWith("# ")) {
+      flushParagraph();
+      html.push(`<h2>${escapeHtml(line.slice(2))}</h2>`);
+      continue;
+    }
+
+    paragraph.push(escapeHtml(line));
+  }
+
+  flushParagraph();
+  return html.join("");
+}
+
+function articleHtml(article) {
+  const raw = article?.content || article?.body || `<p>${excerptOf(article)}</p>`;
+  const text = String(raw || "").trim();
+
+  if (!text) return `<p>${excerptOf(article)}</p>`;
+
+  if (/<(p|h2|h3|ul|ol|li|strong|blockquote|br)\b/i.test(text)) {
+    return text;
+  }
+
+  return markdownToHtml(text);
 }
 
 function excerptOf(article) {
@@ -227,14 +325,14 @@ export default function ArticleDetailPage() {
               </div>
             </div>
             <div className="min-h-[360px] border-t border-[color:var(--stroke)] bg-[color:var(--bg)] lg:border-l lg:border-t-0">
-              {cover ? <img src={cover} alt={article.title} className="h-full min-h-[360px] w-full object-cover" /> : <div className="grid h-full min-h-[360px] place-items-center bg-gradient-to-br from-emerald-500/16 via-cyan-500/10 to-transparent"><BookOpen className="h-24 w-24 text-emerald-700/70 dark:text-emerald-300/70" /></div>}
+              <img src={cover} alt={article.title} className="h-full min-h-[360px] w-full object-cover" onError={(event) => { event.currentTarget.src = imageOf(article); }} />
             </div>
           </div>
         </section>
 
         <section className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_330px]">
           <article className="rounded-[2rem] border border-[color:var(--stroke)] bg-[color:var(--panel)] p-6 md:p-10">
-            <div className="article-content" dangerouslySetInnerHTML={{ __html: article.content || article.body || `<p>${excerptOf(article)}</p>` }} />
+            <div className="article-content" dangerouslySetInnerHTML={{ __html: articleHtml(article) }} />
           </article>
 
           <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">

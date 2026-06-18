@@ -1,0 +1,13 @@
+{
+  "stage": 55,
+  "name": "program_images_refresh",
+  "description": "New unique generated images for all six training programs, cropped to 16:10.",
+  "programs": {
+    "Функциональный старт": "/seed-images/programs/funktsionalnyy-start.png",
+    "Сильное тело": "/seed-images/programs/moshch-i-sila.png",
+    "Основа набора массы": "/seed-images/programs/silovaya-baza.png",
+    "Похудение за 8 недель": "/seed-images/programs/pokhudenie-za-8-nedel.png",
+    "Йога для начинающих": "/seed-images/programs/yoga-dlya-nachinayushchikh.png",
+    "Стретчинг плюс": "/seed-images/programs/stretching-plus.png"
+  }
+}

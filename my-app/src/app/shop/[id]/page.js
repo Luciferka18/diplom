@@ -33,6 +33,47 @@ function listFrom(response) {
   return [];
 }
 
+
+function normalizeKey(value) {
+  return String(value || "").toLowerCase().trim().replace(/ё/g, "е").replace(/й/g, "и").replace(/[^a-zа-я0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+function isBadImage(value) {
+  const path = String(value || "").toLowerCase();
+  return !path || path.includes("/demo/") || path.includes("placeholder") || path.includes("gradient") || path.endsWith(".svg");
+}
+
+const productImageFallbacks = {
+  "whey-protein-gold-standard": "/seed-images/products/whey-protein-gold-standard/main.png",
+  "casein-protein": "/seed-images/products/casein-protein/main.png",
+  "mass-gainer-pro": "/seed-images/products/mass-gainer-pro/main.png",
+  "bcaa-5000": "/seed-images/products/bcaa-5000/main.png",
+  "l-glutamine": "/seed-images/products/l-glutamine/main.png",
+  "omega-3-ultra": "/seed-images/products/omega-3-ultra/main.png",
+  "multivitamin-sport": "/seed-images/products/multivitamin-sport/main.png",
+  "rezinovyy-espander": "/seed-images/products/rezinovyy-espander/main.png",
+  "kovrik-dlya-yogi": "/seed-images/products/kovrik-dlya-yogi/main.png",
+  "butylka-dlya-vody-1l": "/seed-images/products/butylka-dlya-vody-1l/main.png",
+  "magniy-recovery": "/seed-images/products/magniy-recovery/main.png",
+  "preworkout-focus": "/seed-images/products/preworkout-focus/main.png",
+  "protein-bars-12": "/seed-images/products/protein-bars-12/main.png",
+  "creatine-monohydrate": "/seed-images/products/creatine-monohydrate/main.png",
+  "магнии-recovery": "/seed-images/products/magniy-recovery/main.png",
+  "предтренировочныи-комплекс-focus": "/seed-images/products/preworkout-focus/main.png",
+  "протеиновые-батончики-12-шт": "/seed-images/products/protein-bars-12/main.png",
+  "креатин-моногидрат": "/seed-images/products/creatine-monohydrate/main.png"
+};
+
+function mappedProductImage(product) {
+  const keys = [product?.slug, product?.name, product?.title, product?.id].map(normalizeKey).filter(Boolean);
+  for (const key of keys) if (productImageFallbacks[key]) return productImageFallbacks[key];
+  return null;
+}
+
+function firstGoodImage(values = []) {
+  return values.find((value) => !isBadImage(value)) || null;
+}
+
 function money(value) {
   const number = Number(value || 0);
   if (!number) return "—";
@@ -48,12 +89,15 @@ function ratingFrom(product, reviews) {
 }
 
 function safeImage(product, variant) {
-  return variant?.image_url || product?.image_url || product?.cover_image_url || product?.gallery?.[0] || null;
+  return mappedProductImage(product)
+    || firstGoodImage([variant?.image_url, product?.image_url, product?.cover_image_url, ...(Array.isArray(product?.gallery) ? product.gallery : [])])
+    || "/seed-images/products/whey-protein-gold-standard/main.png";
 }
 
 function Gallery({ product, variant, selectedImage, setSelectedImage }) {
   const gallery = useMemo(() => {
-    const values = [variant?.image_url, product?.image_url, product?.cover_image_url, ...(Array.isArray(product?.gallery) ? product.gallery : [])].filter(Boolean);
+    const values = [safeImage(product, variant), variant?.image_url, product?.image_url, product?.cover_image_url, ...(Array.isArray(product?.gallery) ? product.gallery : [])]
+      .filter((value) => !isBadImage(value));
     return Array.from(new Set(values));
   }, [product, variant]);
 
@@ -63,7 +107,7 @@ function Gallery({ product, variant, selectedImage, setSelectedImage }) {
     <section className="rounded-[2rem] border border-[color:var(--stroke)] bg-[color:var(--panel)] p-4 shadow-sm">
       <div className="relative aspect-square overflow-hidden rounded-[1.6rem] border border-[color:var(--stroke)] bg-[color:var(--bg)]">
         {image ? (
-          <img src={image} alt={product?.name || "Товар"} className="h-full w-full object-cover" />
+          <img src={image} alt={product?.name || "Товар"} className="h-full w-full object-cover" onError={(event) => { event.currentTarget.src = mappedProductImage(product) || "/seed-images/products/whey-protein-gold-standard/main.png"; }} />
         ) : (
           <div className="grid h-full w-full place-items-center bg-gradient-to-br from-emerald-500/14 via-cyan-500/10 to-transparent">
             <ShoppingBag className="h-20 w-20 text-emerald-700/70 dark:text-emerald-300/75" />
@@ -105,7 +149,7 @@ function DetailPill({ icon: Icon, title, text }) {
 }
 
 function RelatedCard({ product }) {
-  const image = product?.image_url || product?.cover_image_url || product?.gallery?.[0];
+  const image = safeImage(product, null);
   return (
     <Link href={`/shop/${product.id}`} className="group rounded-[1.5rem] border border-[color:var(--stroke)] bg-[color:var(--panel)] p-3 transition hover:-translate-y-0.5 hover:border-emerald-500/35 hover:shadow-xl hover:shadow-emerald-950/10">
       <div className="aspect-square overflow-hidden rounded-2xl bg-[color:var(--bg)]">

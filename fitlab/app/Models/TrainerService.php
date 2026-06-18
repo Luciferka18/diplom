@@ -10,11 +10,33 @@ class TrainerService extends Model
     use HasFactory;
 
     protected $fillable = [
-        'trainer_id', 'name', 'slug', 'description', 'duration_minutes', 'price',
-        'badge', 'is_intro', 'is_active', 'sort_order',
+        'trainer_id',
+        'name',
+        'slug',
+        'description',
+        'duration_minutes',
+        'price',
+        'badge',
+        'is_intro',
+        'is_active',
+        'sort_order',
     ];
 
-    protected $casts = ['is_intro' => 'boolean', 'is_active' => 'boolean', 'price' => 'integer'];
-    public function trainer() { return $this->belongsTo(Trainer::class); }
-    public function bookings() { return $this->hasMany(Booking::class); }
+    protected $casts = [
+        'duration_minutes' => 'integer',
+        'price' => 'integer',
+        'is_intro' => 'boolean',
+        'is_active' => 'boolean',
+        'sort_order' => 'integer',
+    ];
+
+    public function trainer()
+    {
+        return $this->belongsTo(Trainer::class);
+    }
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
+    }
 }

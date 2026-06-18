@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { apiDelete, apiGet, apiPatch, apiPost, apiPut } from "@/services/api";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -13,6 +14,7 @@ import {
   Plus,
   RefreshCw,
   Search,
+  SlidersHorizontal,
   Trash2,
   X,
 } from "lucide-react";
@@ -482,6 +484,19 @@ export default function AdminEntityManager({ entity }) {
                           >
                             {config.statusOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                           </select>
+                        )}
+                        {entity === "trainers" && (
+                          <Button
+                            as={Link}
+                            href={`/admin/trainers/${item.id}/services`}
+                            variant="outline"
+                            size="sm"
+                            aria-label="Редактировать услуги тренера"
+                            title="Услуги тренера"
+                          >
+                            <SlidersHorizontal className="h-4 w-4" />
+                            Услуги
+                          </Button>
                         )}
                         {!config.readOnly && (
                           <Button variant="outline" size="sm" onClick={() => startEdit(item)} disabled={busy} aria-label="Редактировать">

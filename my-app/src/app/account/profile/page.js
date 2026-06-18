@@ -32,12 +32,15 @@ function Field({ label, icon: Icon, children, hint }) {
 
 function InfoCard({ icon: Icon, title, text, href, cta }) {
   return (
-    <Link href={href} className="group rounded-[1.6rem] border border-[color:var(--stroke)] bg-[color:var(--panel)] p-5 transition hover:-translate-y-0.5 hover:border-emerald-500/35 hover:shadow-xl hover:shadow-emerald-950/10">
-      <div className="flex items-start gap-4">
+    <Link
+      href={href}
+      className="group block w-full rounded-[1.6rem] border border-[color:var(--stroke)] bg-[color:var(--panel)] p-5 transition hover:-translate-y-0.5 hover:border-emerald-500/35 hover:shadow-xl hover:shadow-emerald-950/10"
+    >
+      <div className="flex min-w-0 items-start gap-4">
         <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-emerald-500/12 text-emerald-700 dark:text-emerald-300">
           <Icon className="h-6 w-6" />
         </div>
-        <div>
+        <div className="min-w-0 flex-1">
           <h3 className="font-black text-[color:var(--text)]">{title}</h3>
           <p className="mt-1 text-sm leading-6 text-[color:var(--muted)]">{text}</p>
           <div className="mt-3 text-sm font-black text-emerald-700 dark:text-emerald-300">{cta} →</div>
@@ -123,8 +126,8 @@ export default function AccountProfilePage() {
         </div>
       ) : null}
 
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <form onSubmit={saveProfile} className="rounded-[2rem] border border-[color:var(--stroke)] bg-[color:var(--panel)] p-6 md:p-8">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(300px,0.92fr)]">
+        <form onSubmit={saveProfile} className="min-w-0 rounded-[2rem] border border-[color:var(--stroke)] bg-[color:var(--panel)] p-6 md:p-8">
           <div className="mb-6">
             <h2 className="text-2xl font-black text-[color:var(--text)]">Основная информация</h2>
             <p className="mt-1 text-sm text-[color:var(--muted)]">Эти данные используются для заказов, записей и связи с клубом.</p>
@@ -155,7 +158,7 @@ export default function AccountProfilePage() {
           </div>
         </form>
 
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <InfoCard icon={ShieldCheck} title="Безопасность и 2FA" text="Пароль, двухфакторная аутентификация и коды восстановления находятся в отдельном разделе." href="/account/security" cta="Открыть защиту" />
           <InfoCard icon={CreditCard} title="Абонемент" text="Срок действия, активный тариф и история покупок абонементов." href="/account/membership" cta="Проверить абонемент" />
           <InfoCard icon={Bell} title="Уведомления" text="Настройки событий, записи, заказы, программа и важные системные сообщения." href="/account/notifications" cta="Посмотреть уведомления" />

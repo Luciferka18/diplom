@@ -26,7 +26,7 @@ class TrainerProfileController extends Controller
             return response()->json(['message' => 'Trainer profile not found'], 404);
         }
 
-        return new TrainerResource($trainer->load(['user', 'reviews.user', 'schedules.location']));
+        return new TrainerResource($trainer->load(['user', 'reviews.user', 'schedules.location', 'services']));
     }
 
     /**
@@ -68,6 +68,6 @@ class TrainerProfileController extends Controller
 
         $trainer->update($data);
 
-        return new TrainerResource($trainer->fresh(['user', 'schedules.location']));
+        return new TrainerResource($trainer->fresh(['user', 'schedules.location', 'services']));
     }
 }

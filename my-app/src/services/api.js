@@ -2,6 +2,7 @@
 
 const TOKEN_KEY = "nashfit_token";
 const USER_KEY = "nashfit_user";
+const AUTH_CHANGED_EVENT = "nashfit:auth-changed";
 
 function isServer() {
   return typeof window === "undefined";
@@ -34,6 +35,12 @@ function clearAuth() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
   localStorage.removeItem("user");
+  localStorage.removeItem("token");
+  localStorage.removeItem("auth_token");
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("accessToken");
+  window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
 }
 
 async function parseResponse(res) {

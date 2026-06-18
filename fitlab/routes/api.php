@@ -16,7 +16,6 @@ use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\ContentRecommendationController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\HomeController;
-use App\Http\Controllers\Api\MuscleController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\PaymentController;
@@ -36,11 +35,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class);
 Route::get('/home', [HomeController::class, 'index']);
-
-Route::get('/muscles', [MuscleController::class, 'index']);
-Route::get('/muscles/{slug}', [MuscleController::class, 'show']);
-Route::get('/muscles/{slug}/exercises', [MuscleController::class, 'exercises']);
-Route::get('/exercises/{slug}', [MuscleController::class, 'showExercise']);
 
 Route::get('/trainers', [TrainerController::class, 'index']);
 Route::get('/trainers/{trainer}', [TrainerController::class, 'show']);
@@ -70,6 +64,7 @@ Route::get('/recommendations/{sourceType}/{sourceId}', [ContentRecommendationCon
 
 Route::get('/reviews', [ReviewController::class, 'index']);
 Route::post('/contacts', [ContactController::class, 'send']);
+Route::post('/payments/yookassa/webhook', [PaymentController::class, 'yookassaWebhook']);
 
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
@@ -109,6 +104,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/memberships/{membership}/purchase', [MembershipController::class, 'purchase']);
     Route::post('/promo-codes/validate', [PromoCodeController::class, 'validateCode']);
     Route::get('/payments/{payment}', [PaymentController::class, 'show']);
+    Route::post('/payments/{payment}/yookassa', [PaymentController::class, 'yookassaCreate']);
+    Route::post('/payments/{payment}/yookassa-refresh', [PaymentController::class, 'yookassaRefresh']);
     Route::post('/payments/{payment}/mock-confirm', [PaymentController::class, 'mockConfirm']);
 
     Route::get('/account/reviews', [ReviewController::class, 'mine']);
@@ -171,6 +168,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/trainer/profile', [TrainerProfileController::class, 'show']);
         Route::post('/trainer/profile', [TrainerProfileController::class, 'update']);
         Route::put('/trainer/schedule', [TrainerScheduleController::class, 'update']);
+        Route::get('/trainer/services', [TrainerServiceController::class, 'mine']);
+        Route::put('/trainer/services', [TrainerServiceController::class, 'updateMine']);
     });
 
     Route::middleware('role:admin')->group(function () {
@@ -190,6 +189,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/admin/monetization/{entity}/{id}', [AdminMonetizationController::class, 'destroy']);
 
         Route::get('/admin/dashboard/overview', [AdminDashboardController::class, 'overview']);
+        Route::get('/admin/trainers/{trainer}/services', [TrainerServiceController::class, 'adminIndex']);
+        Route::put('/admin/trainers/{trainer}/services', [TrainerServiceController::class, 'adminUpdate']);
         Route::get('/admin/{entity}', [AdminController::class, 'index']);
         Route::post('/admin/{entity}', [AdminController::class, 'store']);
         Route::put('/admin/{entity}/{id}', [AdminController::class, 'update']);

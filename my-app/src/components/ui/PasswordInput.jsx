@@ -4,19 +4,19 @@ import { useState } from "react";
 import { cn } from "@/lib/cn";
 import { Eye, EyeOff } from "lucide-react";
 
-export function PasswordInput({ 
-  className, 
-  placeholder = "Пароль", 
-  showStrength = false, 
-  value = "", 
+export function PasswordInput({
+  className,
+  placeholder = "Пароль",
+  showStrength = false,
+  value = "",
   onChange,
   disabled,
-  ...props 
+  leftIcon = null,
+  ...props
 }) {
   const [showPassword, setShowPassword] = useState(false);
 
   const getStrengthInfo = (pwd) => {
-    let strength = 0;
     const checks = {
       length: pwd.length >= 8,
       number: /\d/.test(pwd),
@@ -24,8 +24,7 @@ export function PasswordInput({
       special: /[^a-zA-Z0-9а-яА-ЯёЁ]/.test(pwd),
     };
 
-    strength = Object.values(checks).filter(Boolean).length;
-
+    const strength = Object.values(checks).filter(Boolean).length;
     const labels = ["Слабый", "Средний", "Хороший", "Надёжный"];
     const colors = ["bg-red-500", "bg-orange-500", "bg-yellow-500", "bg-[color:var(--accent)]"];
 
@@ -37,15 +36,22 @@ export function PasswordInput({
     };
   };
 
-  const strengthInfo = showStrength && value ? getStrengthInfo(value) : null;
+  const strengthInfo = showStrength && value ? getStrengthInfo(String(value)) : null;
 
   return (
     <div className="w-full">
       <div className="relative">
+        {leftIcon ? (
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--muted)]">
+            {leftIcon}
+          </span>
+        ) : null}
         <input
           type={showPassword ? "text" : "password"}
           className={cn(
-            "w-full rounded-[14px] border border-[color:var(--stroke)] bg-[color:var(--elevated)] px-3.5 py-3 shadow-[var(--shadow-xs)] pr-11 text-[color:var(--text)] placeholder:text-[color:var(--muted2)] outline-none transition hover:border-[color:var(--stroke-strong)] focus:border-[color:var(--accent)] focus:ring-4 focus:ring-[color:color-mix(in_srgb,var(--accent)_14%,transparent)]",
+            "w-full rounded-[14px] border border-[color:var(--stroke)] bg-[color:var(--elevated)] px-3.5 py-3 text-[color:var(--text)] shadow-[var(--shadow-xs)] outline-none transition placeholder:text-[color:var(--muted2)] hover:border-[color:var(--stroke-strong)] focus:border-[color:var(--accent)] focus:ring-4 focus:ring-[color:color-mix(in_srgb,var(--accent)_14%,transparent)] disabled:cursor-not-allowed disabled:opacity-60",
+            leftIcon ? "pl-10" : "",
+            "pr-11",
             className
           )}
           placeholder={placeholder}
@@ -59,6 +65,7 @@ export function PasswordInput({
           onClick={() => setShowPassword(!showPassword)}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-[color:var(--muted)] hover:text-[color:var(--text)] transition-colors"
           tabIndex={-1}
+          aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"}
         >
           {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
         </button>

@@ -6,6 +6,31 @@ import { Bell, CheckCheck, Loader2 } from "lucide-react";
 import { apiGet, apiPatch } from "@/services/api";
 import { cn } from "@/lib/cn";
 
+
+function normalizeNotificationType(type) {
+  return String(type || "").replace(/^admin\./, "");
+}
+
+function notificationKey(item) {
+  const data = item?.data || {};
+  const paymentId = data.payment_id || data.paymentId;
+  const orderId = data.order_id || data.orderId;
+  if (paymentId || orderId) {
+    return `${normalizeNotificationType(item.type)}:${paymentId ? `payment-${paymentId}` : `order-${orderId}`}:${item.title || ""}`;
+  }
+  return `${item?.type || ""}:${item?.title || ""}:${item?.body || ""}:${item?.action_url || ""}`;
+}
+
+function uniqueNotifications(list) {
+  const seen = new Set();
+  return (Array.isArray(list) ? list : []).filter((item) => {
+    const key = notificationKey(item);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function timeAgo(value) {
   if (!value) return "";
   const diff = Date.now() - new Date(value).getTime();
@@ -31,7 +56,7 @@ export default function NotificationBell({ compact = false }) {
         ? await apiGet("/account/notifications?per_page=6")
         : await apiGet("/account/notifications/unread-count");
       if (list) {
-        setItems(response?.data || []);
+        setItems(uniqueNotifications(response?.data || []));
         setCount(Number(response?.unread_count || 0));
       } else {
         setCount(Number(response?.count || 0));

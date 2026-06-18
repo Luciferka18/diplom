@@ -7,7 +7,9 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\PaymentIntent;
 use App\Services\PaymentService;
+use App\Services\YooKassaPaymentGateway;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -17,6 +19,81 @@ class PaymentController extends Controller
     {
         abort_unless($request->user()->isAdmin() || (int) $payment->user_id === (int) $request->user()->id, 403);
         return response()->json(['data' => $this->format($payment)]);
+    }
+
+    public function yookassaCreate(Request $request, Payment $payment, YooKassaPaymentGateway $gateway)
+    {
+        abort_unless($request->user()->isAdmin() || (int) $payment->user_id === (int) $request->user()->id, 403);
+
+        if ($payment->status === 'paid') {
+            return response()->json(['data' => $this->format($payment), 'message' => 'Оплата уже подтверждена.']);
+        }
+
+        if ((int) $payment->amount <= 0) {
+            $payment->update(['provider' => 'yookassa', 'status' => 'paid', 'paid_at' => now()]);
+            return response()->json(['data' => $this->format($payment), 'message' => 'Оплата не требуется.']);
+        }
+
+        $data = $request->validate([
+            'return_url' => ['nullable', 'url'],
+            'description' => ['nullable', 'string', 'max:128'],
+        ]);
+
+        $returnUrl = $data['return_url'] ?? config('yookassa.return_url');
+        $response = $gateway->createPayment($payment, $returnUrl, $data['description'] ?? null);
+
+        $metadata = array_merge($payment->metadata ?: [], [
+            'yookassa' => [
+                'payment_id' => $response['id'] ?? null,
+                'status' => $response['status'] ?? null,
+                'confirmation_url' => Arr::get($response, 'confirmation.confirmation_url'),
+                'created_at' => now()->toIso8601String(),
+            ],
+        ]);
+
+        $payment->update([
+            'provider' => 'yookassa',
+            'status' => $response['status'] ?? 'pending',
+            'external_id' => $response['id'] ?? $payment->external_id,
+            'idempotency_key' => $payment->idempotency_key ?: (string) Str::uuid(),
+            'metadata' => $metadata,
+        ]);
+
+        return response()->json([
+            'data' => $this->format($payment->fresh()),
+            'confirmation_url' => Arr::get($response, 'confirmation.confirmation_url'),
+        ]);
+    }
+
+    public function yookassaRefresh(Request $request, Payment $payment, YooKassaPaymentGateway $gateway, PaymentService $service)
+    {
+        abort_unless($request->user()->isAdmin() || (int) $payment->user_id === (int) $request->user()->id, 403);
+
+        if (! $payment->external_id) {
+            return response()->json(['data' => $this->format($payment)]);
+        }
+
+        $response = $gateway->getPayment($payment->external_id);
+        $payment = $this->syncYooKassaPayment($payment, $response, $service);
+
+        return response()->json(['data' => $this->format($payment)]);
+    }
+
+    public function yookassaWebhook(Request $request, PaymentService $service)
+    {
+        $object = $request->input('object', []);
+        $externalId = $object['id'] ?? null;
+
+        if (! $externalId) {
+            return response()->json(['ok' => true]);
+        }
+
+        $payment = Payment::query()->where('external_id', $externalId)->first();
+        if ($payment) {
+            $this->syncYooKassaPayment($payment, $object, $service);
+        }
+
+        return response()->json(['ok' => true]);
     }
 
     public function mockConfirm(Request $request, Payment $payment, PaymentService $service)
@@ -36,7 +113,6 @@ class PaymentController extends Controller
         return response()->json(['data' => $this->format($payment), 'message' => 'Демонстрационная оплата прошла успешно.']);
     }
 
-    // Legacy store payment endpoints remain compatible.
     public function intent(Request $request)
     {
         $data = $request->validate(['order_id' => ['required', 'exists:orders,id']]);
@@ -70,12 +146,63 @@ class PaymentController extends Controller
         });
     }
 
+    private function syncYooKassaPayment(Payment $payment, array $payload, PaymentService $service): Payment
+    {
+        $status = $payload['status'] ?? $payment->status;
+        $metadata = array_merge($payment->metadata ?: [], [
+            'yookassa' => array_filter([
+                'payment_id' => $payload['id'] ?? $payment->external_id,
+                'status' => $status,
+                'paid' => $payload['paid'] ?? null,
+                'refundable' => $payload['refundable'] ?? null,
+                'synced_at' => now()->toIso8601String(),
+                'confirmation_url' => Arr::get($payload, 'confirmation.confirmation_url') ?: Arr::get($payment->metadata ?: [], 'yookassa.confirmation_url'),
+            ], fn ($value) => $value !== null),
+            'yookassa_last_payload' => $payload,
+        ]);
+
+        if ($payment->status === 'paid' || $payment->paid_at) {
+            $payment->update([
+                'provider' => 'yookassa',
+                'status' => 'paid',
+                'metadata' => $metadata,
+                'failed_at' => $payment->failed_at,
+            ]);
+
+            return $payment->fresh('payable');
+        }
+
+        if ($status === 'succeeded') {
+            $payment->update([
+                'provider' => 'yookassa',
+                'status' => $status,
+                'metadata' => $metadata,
+            ]);
+
+            return $service->confirm($payment->fresh(), 'yookassa_' . ($payload['id'] ?? Str::uuid()))->fresh('payable');
+        }
+
+        $payment->update([
+            'provider' => 'yookassa',
+            'status' => $status,
+            'metadata' => $metadata,
+            'failed_at' => $status === 'canceled' ? now() : $payment->failed_at,
+        ]);
+
+        return $payment->fresh('payable');
+    }
+
     private function format(Payment $payment): array
     {
         return [
-            'id' => $payment->id, 'provider' => $payment->provider, 'status' => $payment->status,
-            'amount' => $payment->amount, 'currency' => $payment->currency,
-            'external_id' => $payment->external_id, 'paid_at' => $payment->paid_at,
+            'id' => $payment->id,
+            'provider' => $payment->provider,
+            'status' => $payment->status,
+            'amount' => $payment->amount,
+            'currency' => $payment->currency,
+            'external_id' => $payment->external_id,
+            'paid_at' => $payment->paid_at,
+            'confirmation_url' => Arr::get($payment->metadata ?: [], 'yookassa.confirmation_url'),
         ];
     }
 }

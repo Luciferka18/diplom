@@ -142,18 +142,28 @@ export function CartProvider({ children }) {
     }
   }, [cart, isAuthed]);
 
-  const clearCart = useCallback(async () => {
-    if (!isAuthed) setCart([]);
-    else {
-      const response = await apiDelete("/cart");
-      setCart(normalizeCart(response));
+  const clearLocalCart = useCallback(() => {
+    setCart([]);
+    setLastAdded(null);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(LS_KEY);
+      localStorage.removeItem("cart");
     }
-  }, [isAuthed]);
+  }, []);
+
+  const clearCart = useCallback(async () => {
+    if (!isAuthed) {
+      clearLocalCart();
+      return;
+    }
+    const response = await apiDelete("/cart");
+    setCart(normalizeCart(response));
+  }, [isAuthed, clearLocalCart]);
 
   const totalCount = useMemo(() => cart.reduce((sum, item) => sum + Number(item.quantity || 0), 0), [cart]);
   const totalPrice = useMemo(() => cart.reduce((sum, item) => sum + Number(item.quantity || 0) * Number(item.price || 0), 0), [cart]);
 
-  return <CartContext.Provider value={{ cart, addToCart, setQuantity, removeFromCart, clearCart, refreshCart, totalCount, totalPrice, loadingCart, lastAdded, dismissLastAdded: () => setLastAdded(null) }}>{children}</CartContext.Provider>;
+  return <CartContext.Provider value={{ cart, addToCart, setQuantity, removeFromCart, clearCart, clearLocalCart, refreshCart, totalCount, totalPrice, loadingCart, lastAdded, dismissLastAdded: () => setLastAdded(null) }}>{children}</CartContext.Provider>;
 }
 
 export function useCart() {

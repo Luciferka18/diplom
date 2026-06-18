@@ -3,93 +3,77 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
 use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use BaconQrCode\Renderer\ImageRenderer;
-use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
-use PragmaRX\Google2FA\Google2FA;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class TwoFactorController extends Controller
 {
-    /**
-     * Генерация 2FA секрета и QR-кода
-     */
     public function generateSecret(Request $request)
     {
         $user = $request->user();
 
         if ($user->hasEnabledTwoFactor()) {
-            return response()->json([
-                'message' => '2FA уже включен'
-            ], 400);
+            return response()->json(['message' => '2FA уже включена.'], 400);
         }
 
         $secret = $user->generateTwoFactorSecret();
         $qrCodeUrl = $user->getTwoFactorQrCodeUrl($secret);
         $recoveryCodes = $user->generateRecoveryCodes();
 
-        // Генерируем QR-код в base64
-        $qrCodeBase64 = $this->generateQrCodeBase64($qrCodeUrl);
-
         return response()->json([
             'secret' => $secret,
             'qr_code_url' => $qrCodeUrl,
-            'qr_code_base64' => $qrCodeBase64,
+            'qr_code_base64' => $this->generateQrCodeBase64($qrCodeUrl),
             'recovery_codes' => $recoveryCodes,
         ]);
     }
 
-    /**
-     * Генерация QR-кода в base64
-     */
     private function generateQrCodeBase64(string $qrCodeUrl): string
     {
         try {
             $renderer = new ImageRenderer(
                 new RendererStyle(300),
-                new ImagickImageBackEnd()
+                new SvgImageBackEnd()
             );
             $writer = new Writer($renderer);
-            $qrCodeImage = $writer->writeString($qrCodeUrl);
-            return 'data:image/png;base64,' . base64_encode($qrCodeImage);
-        } catch (\Exception $e) {
-            // Фолбэк на внешний API
+            $svg = $writer->writeString($qrCodeUrl);
+            return 'data:image/svg+xml;base64,' . base64_encode($svg);
+        } catch (\Throwable $e) {
             return 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qrCodeUrl);
         }
     }
 
-    /**
-     * Подтверждение включения 2FA
-     */
     public function confirmTwoFactor(Request $request)
     {
         $request->validate([
-            'code' => ['required', 'string', 'size:6'],
+            'code' => ['required', 'string', 'min:6', 'max:12'],
         ]);
 
         $user = $request->user();
-        $code = $request->input('code');
 
-        if ($user->verifyTwoFactorCode($code)) {
-            $user->confirmTwoFactor();
-            
-            return response()->json([
-                'message' => '2FA успешно включен',
-                'enabled' => true,
-            ]);
+        if (! $user->two_factor_secret) {
+            return response()->json(['message' => 'Сначала начните настройку 2FA.'], 422);
         }
 
+        if (! $user->verifyTwoFactorCode($request->input('code'))) {
+            return response()->json(['message' => 'Неверный код из приложения.'], 422);
+        }
+
+        $user->confirmTwoFactor();
+
         return response()->json([
-            'message' => 'Неверный код'
-        ], 422);
+            'message' => '2FA успешно включена.',
+            'enabled' => true,
+            'user' => new UserResource($user->fresh()),
+        ]);
     }
 
-    /**
-     * Отключение 2FA
-     */
     public function disableTwoFactor(Request $request)
     {
         $request->validate([
@@ -98,80 +82,65 @@ class TwoFactorController extends Controller
 
         $user = $request->user();
 
-        if (!Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'message' => 'Неверный пароль'
-            ], 422);
+        if (! Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Неверный пароль.'], 422);
         }
 
         $user->disableTwoFactor();
 
         return response()->json([
-            'message' => '2FA успешно отключен',
+            'message' => '2FA успешно отключена.',
             'enabled' => false,
+            'user' => new UserResource($user->fresh()),
         ]);
     }
 
-    /**
-     * Проверка 2FA кода при входе
-     */
     public function verify(Request $request)
     {
         $request->validate([
             'user_id' => ['required', 'integer', 'exists:users,id'],
-            'code' => ['required', 'string'],
+            'code' => ['required', 'string', 'max:32'],
         ]);
 
-        $user = User::find($request->user_id);
+        $user = User::find($request->integer('user_id'));
 
-        if (!$user || !$user->hasEnabledTwoFactor()) {
-            return response()->json([
-                'message' => '2FA не включен'
-            ], 400);
+        if (! $user || ! $user->hasEnabledTwoFactor()) {
+            return response()->json(['message' => '2FA не включена для этого аккаунта.'], 400);
         }
 
-        // Проверка 2FA кода
-        if ($user->verifyTwoFactorCode($request->code)) {
-            $token = $user->createToken('nashfit-spa')->plainTextToken;
+        $code = trim((string) $request->input('code'));
+        $usedRecoveryCode = false;
 
-            return response()->json([
-                'user' => $user,
-                'token' => $token,
-            ]);
+        if (! $user->verifyTwoFactorCode($code)) {
+            if (! $user->verifyRecoveryCode($code)) {
+                return response()->json(['message' => 'Неверный код.'], 422);
+            }
+            $usedRecoveryCode = true;
         }
 
-        // Проверка кода восстановления
-        if ($user->verifyRecoveryCode($request->code)) {
-            $token = $user->createToken('nashfit-spa')->plainTextToken;
-
-            return response()->json([
-                'user' => $user,
-                'token' => $token,
-                'message' => 'Вход выполнен с кодом восстановления',
-            ]);
-        }
+        $token = $user->createToken('nashfit-spa')->plainTextToken;
 
         return response()->json([
-            'message' => 'Неверный код'
-        ], 422);
+            'user' => new UserResource($user->fresh()),
+            'token' => $token,
+            'requires_2fa' => false,
+            'used_recovery_code' => $usedRecoveryCode,
+            'message' => $usedRecoveryCode ? 'Вход выполнен с кодом восстановления.' : 'Вход выполнен.',
+        ]);
     }
 
-    /**
-     * Проверка статуса 2FA для пользователя
-     */
     public function status(Request $request)
     {
         $user = $request->user();
+        $codes = $user->recoveryCodesForDisplayCount();
 
         return response()->json([
             'enabled' => $user->hasEnabledTwoFactor(),
-            'confirmed' => !is_null($user->two_factor_confirmed_at),
+            'confirmed' => ! is_null($user->two_factor_confirmed_at),
+            'recovery_codes_count' => $codes,
         ]);
     }
 
-    /**
-     * Генерация новых кодов восстановления
-     */
     public function regenerateRecoveryCodes(Request $request)
     {
         $request->validate([
@@ -180,17 +149,17 @@ class TwoFactorController extends Controller
 
         $user = $request->user();
 
-        if (!Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'message' => 'Неверный пароль'
-            ], 422);
+        if (! Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Неверный пароль.'], 422);
         }
 
-        $recoveryCodes = $user->generateRecoveryCodes();
+        if (! $user->hasEnabledTwoFactor()) {
+            return response()->json(['message' => 'Сначала включите 2FA.'], 422);
+        }
 
         return response()->json([
-            'recovery_codes' => $recoveryCodes,
-            'message' => 'Коды восстановления перевыпущены',
+            'recovery_codes' => $user->generateRecoveryCodes(),
+            'message' => 'Коды восстановления перевыпущены.',
         ]);
     }
 }

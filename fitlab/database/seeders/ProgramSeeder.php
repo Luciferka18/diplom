@@ -12,6 +12,8 @@ class ProgramSeeder extends Seeder
 {
     public function run(): void
     {
+        Program::query()->delete();
+
         $tags = [
             ['name' => 'Похудение', 'slug' => 'fat-loss'],
             ['name' => 'Набор массы', 'slug' => 'muscle-gain'],
@@ -19,98 +21,95 @@ class ProgramSeeder extends Seeder
             ['name' => 'Гибкость', 'slug' => 'flexibility'],
             ['name' => 'Для новичков', 'slug' => 'beginner'],
             ['name' => 'Продвинутый', 'slug' => 'advanced'],
+            ['name' => 'Восстановление', 'slug' => 'recovery'],
         ];
 
         foreach ($tags as $tagData) {
             Tag::firstOrCreate(['slug' => $tagData['slug']], $tagData);
         }
 
-        $trainers = Trainer::all();
+        $trainers = Trainer::query()->get()->values();
         $tagIds = Tag::pluck('id')->toArray();
 
         $programs = [
             [
                 'title' => 'Функциональный старт',
-                'description' => 'Программа для начинающих. Базовые упражнения для укрепления всех групп мышц. Подходит для тех, кто никогда не тренировался.',
+                'description' => 'Четырёхнедельный вход в тренировки без перегруза: базовые движения, лёгкие круги, кор и привычка заниматься регулярно.',
                 'level' => 'beginner',
                 'duration_weeks' => 4,
                 'price' => 0,
-                'trainer_id' => $trainers->first()?->id ?? 1,
-                'image_url' => '/seed-images/programs/funktsionalnyy-start.webp',
+                'trainer_id' => $trainers->get(0)?->id,
+                'image_url' => '/seed-images/programs/funktsionalnyy-start.png',
                 'tags' => [1, 5],
             ],
             [
-                'title' => 'Похудение за 8 недель',
-                'description' => 'Интенсивная программа для снижения веса. Сочетание кардио и силовых упражнений.',
+                'title' => 'Сильное тело',
+                'description' => 'Силовая программа на восемь недель: ноги, спина, грудь, плечи и корпус. Внутри — прогрессия нагрузки и понятная структура.',
                 'level' => 'intermediate',
                 'duration_weeks' => 8,
                 'price' => 0,
-                'trainer_id' => $trainers->first()?->id ?? 1,
-                'image_url' => '/seed-images/programs/pokhudenie-za-8-nedel.webp',
+                'trainer_id' => $trainers->get(1)?->id,
+                'image_url' => '/seed-images/programs/moshch-i-sila.png',
+                'tags' => [2, 6],
+            ],
+            [
+                'title' => 'Основа набора массы',
+                'description' => 'Десятинедельный план гипертрофии для тех, кто хочет системно набрать мышечную массу: объём, техника и восстановление.',
+                'level' => 'intermediate',
+                'duration_weeks' => 10,
+                'price' => 0,
+                'trainer_id' => $trainers->get(3)?->id,
+                'image_url' => '/seed-images/programs/silovaya-baza.png',
+                'tags' => [2, 6],
+            ],
+            [
+                'title' => 'Похудение за 8 недель',
+                'description' => 'Комбинация кардио, силовых тренировок и умеренного дефицита калорий. Подходит для тех, кто хочет устойчивого снижения веса.',
+                'level' => 'intermediate',
+                'duration_weeks' => 8,
+                'price' => 0,
+                'trainer_id' => $trainers->get(0)?->id,
+                'image_url' => '/seed-images/programs/pokhudenie-za-8-nedel.png',
                 'tags' => [1, 3],
             ],
             [
-                'title' => 'Силовая база',
-                'description' => 'Программа для набора мышечной массы. Работа с весами, базовые упражнения: присед, жим, тяга.',
-                'level' => 'intermediate',
-                'duration_weeks' => 12,
-                'price' => 0,
-                'trainer_id' => $trainers->skip(1)->first()?->id ?? 2,
-                'image_url' => '/seed-images/programs/silovaya-baza.webp',
-                'tags' => [2, 6],
-            ],
-            [
-                'title' => 'Мощь и сила',
-                'description' => 'Продвинутая программа для опытных атлетов. Увеличение силовых показателей в основных движениях.',
-                'level' => 'advanced',
-                'duration_weeks' => 16,
-                'price' => 0,
-                'trainer_id' => $trainers->skip(1)->first()?->id ?? 2,
-                'image_url' => '/seed-images/programs/moshch-i-sila.webp',
-                'tags' => [2, 6],
-            ],
-            [
                 'title' => 'Йога для начинающих',
-                'description' => 'Мягкое введение в мир йоги. Базовые асаны, дыхательные практики, медитация.',
+                'description' => 'Мягкое введение в практику: дыхание, базовые асаны, подвижность и спокойная работа с телом без спешки.',
                 'level' => 'beginner',
                 'duration_weeks' => 6,
                 'price' => 0,
-                'trainer_id' => $trainers->skip(2)->first()?->id ?? 3,
-                'image_url' => '/seed-images/programs/yoga-dlya-nachinayushchikh.webp',
-                'tags' => [4, 5],
+                'trainer_id' => $trainers->last()?->id,
+                'image_url' => '/seed-images/programs/yoga-dlya-nachinayushchikh.png',
+                'tags' => [4, 5, 7],
             ],
             [
                 'title' => 'Стретчинг плюс',
-                'description' => 'Глубокая растяжка всего тела. Улучшение гибкости и подвижности суставов.',
-                'level' => 'intermediate',
-                'duration_weeks' => 8,
+                'description' => 'Улучшение гибкости, подвижности суставов и восстановления после офисной нагрузки. Отличный вариант для общего самочувствия.',
+                'level' => 'beginner',
+                'duration_weeks' => 6,
                 'price' => 0,
-                'trainer_id' => $trainers->skip(2)->first()?->id ?? 3,
-                'image_url' => '/seed-images/programs/stretching-plus.webp',
-                'tags' => [4, 3],
+                'trainer_id' => $trainers->get(4)?->id,
+                'image_url' => '/seed-images/programs/stretching-plus.png',
+                'tags' => [4, 5, 7],
             ],
         ];
 
         foreach ($programs as $programData) {
-            $tags = $programData['tags'] ?? [];
+            $programTags = $programData['tags'] ?? [];
             unset($programData['tags']);
 
             $payload = $this->filterColumns('programs', $programData);
+            $program = Program::updateOrCreate(['title' => $programData['title']], $payload);
 
-            $program = Program::updateOrCreate(
-                ['title' => $programData['title']],
-                $payload
-            );
-
-            if (!empty($tags) && !empty($tagIds)) {
+            if (!empty($programTags) && !empty($tagIds)) {
                 $selectedTags = [];
-                foreach ($tags as $tagIndex) {
+                foreach ($programTags as $tagIndex) {
                     if (isset($tagIds[$tagIndex - 1])) {
                         $selectedTags[] = $tagIds[$tagIndex - 1];
                     }
                 }
                 if (!empty($selectedTags)) {
-                    $program->tags()->syncWithoutDetaching($selectedTags);
+                    $program->tags()->sync($selectedTags);
                 }
             }
         }

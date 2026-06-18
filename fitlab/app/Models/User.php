@@ -5,7 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\HasApiTokens;
+use PragmaRX\Google2FA\Google2FA;
 
 class User extends Authenticatable
 {
@@ -16,7 +18,6 @@ class User extends Authenticatable
         'name',
         'phone',
         'email',
-        'avatar_url',
         'password',
         'role',
         'is_banned',
@@ -38,58 +39,47 @@ class User extends Authenticatable
         'two_factor_confirmed_at' => 'datetime',
     ];
 
-    /**
-     * Проверка включен ли 2FA
-     */
     public function hasEnabledTwoFactor(): bool
     {
-        return !is_null($this->two_factor_secret) && !is_null($this->two_factor_confirmed_at);
+        return filled($this->two_factor_secret) && ! is_null($this->two_factor_confirmed_at);
     }
 
-    /**
-     * Генерация секретного ключа для 2FA
-     */
     public function generateTwoFactorSecret(): string
     {
-        $google2fa = new \PragmaRX\Google2FA\Google2FA();
-        $secret = $google2fa->generateSecretKey();
-        
+        $secret = (new Google2FA())->generateSecretKey(32);
+
         $this->forceFill([
             'two_factor_secret' => $secret,
+            'two_factor_confirmed_at' => null,
+            'two_factor_recovery_codes' => null,
         ])->save();
-        
+
         return $secret;
     }
 
-    /**
-     * Получить QR-код для 2FA
-     */
-    public function getTwoFactorQrCodeUrl(string $secret, string $companyName = 'НашФит'): string
+    public function getTwoFactorQrCodeUrl(string $secret, string $companyName = 'NashFit'): string
     {
-        $google2fa = new \PragmaRX\Google2FA\Google2FA();
-        return $google2fa->getQRCodeUrl(
+        return (new Google2FA())->getQRCodeUrl(
             $companyName,
-            $this->email ?? $this->login,
+            $this->email ?: $this->login,
             $secret
         );
     }
 
-    /**
-     * Проверка 2FA кода
-     */
     public function verifyTwoFactorCode(string $code): bool
     {
-        if (!$this->two_factor_secret) {
+        if (! $this->two_factor_secret) {
             return false;
         }
 
-        $google2fa = new \PragmaRX\Google2FA\Google2FA();
-        return $google2fa->verifyKey($this->two_factor_secret, $code);
+        $digits = preg_replace('/\D+/', '', $code);
+        if (strlen($digits) !== 6) {
+            return false;
+        }
+
+        return (new Google2FA())->verifyKey($this->two_factor_secret, $digits, 2);
     }
 
-    /**
-     * Подтверждение включения 2FA
-     */
     public function confirmTwoFactor(): void
     {
         $this->forceFill([
@@ -97,9 +87,6 @@ class User extends Authenticatable
         ])->save();
     }
 
-    /**
-     * Отключение 2FA
-     */
     public function disableTwoFactor(): void
     {
         $this->forceFill([
@@ -109,46 +96,69 @@ class User extends Authenticatable
         ])->save();
     }
 
-    /**
-     * Генерация кодов восстановления
-     */
     public function generateRecoveryCodes(): array
     {
+        $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         $codes = [];
+
         for ($i = 0; $i < 8; $i++) {
-            $codes[] = strtoupper(substr(str_shuffle('ABCDEFGHJKLMNPQRSTUVWXYZ23456789'), 0, 8));
+            $code = '';
+            for ($j = 0; $j < 8; $j++) {
+                $code .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+            }
+            $codes[] = $code;
         }
-        
+
         $this->forceFill([
-            'two_factor_recovery_codes' => json_encode($codes),
+            'two_factor_recovery_codes' => json_encode(array_map(fn ($code) => Hash::make($code), $codes)),
         ])->save();
-        
+
         return $codes;
     }
 
-    /**
-     * Проверка кода восстановления
-     */
+    public function recoveryCodesForDisplayCount(): int
+    {
+        if (! $this->two_factor_recovery_codes) {
+            return 0;
+        }
+
+        $codes = json_decode($this->two_factor_recovery_codes, true);
+        return is_array($codes) ? count($codes) : 0;
+    }
+
     public function verifyRecoveryCode(string $code): bool
     {
-        if (!$this->two_factor_recovery_codes) {
+        if (! $this->two_factor_recovery_codes) {
+            return false;
+        }
+
+        $input = strtoupper(preg_replace('/[^A-Z0-9]+/', '', $code));
+        if ($input === '') {
             return false;
         }
 
         $codes = json_decode($this->two_factor_recovery_codes, true);
-        $index = array_search($code, $codes);
-        
-        if ($index === false) {
+        if (! is_array($codes)) {
             return false;
         }
 
-        // Удаляем использованный код
-        unset($codes[$index]);
-        $this->forceFill([
-            'two_factor_recovery_codes' => json_encode(array_values($codes)),
-        ])->save();
+        foreach ($codes as $index => $stored) {
+            $stored = (string) $stored;
+            $matchesHashed = str_starts_with($stored, '$2y$') || str_starts_with($stored, '$argon');
+            $ok = $matchesHashed
+                ? Hash::check($input, $stored)
+                : hash_equals(strtoupper(preg_replace('/[^A-Z0-9]+/', '', $stored)), $input);
 
-        return true;
+            if ($ok) {
+                unset($codes[$index]);
+                $this->forceFill([
+                    'two_factor_recovery_codes' => json_encode(array_values($codes)),
+                ])->save();
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function isAdmin(): bool
@@ -226,16 +236,12 @@ class User extends Authenticatable
         return $this->hasMany(UserAddress::class);
     }
 
-    /**
-     * Проверка, заблокирован ли пользователь
-     */
     public function isBanned(): bool
     {
-        if (!$this->is_banned) {
+        if (! $this->is_banned) {
             return false;
         }
 
-        // Проверяем, истек ли срок блокировки
         if ($this->banned_until && $this->banned_until->isPast()) {
             $this->unban();
             return false;
@@ -244,9 +250,6 @@ class User extends Authenticatable
         return true;
     }
 
-    /**
-     * Заблокировать пользователя
-     */
     public function ban(?string $reason = null, $durationDays = null, ?int $bannedBy = null): void
     {
         $this->forceFill([
@@ -257,9 +260,6 @@ class User extends Authenticatable
         ])->save();
     }
 
-    /**
-     * Разблокировать пользователя
-     */
     public function unban(): void
     {
         $this->forceFill([
@@ -270,21 +270,15 @@ class User extends Authenticatable
         ])->save();
     }
 
-    /**
-     * Получить оставшееся время блокировки
-     */
     public function getBanRemainingDays(): ?int
     {
-        if (!$this->banned_until) {
+        if (! $this->banned_until) {
             return null;
         }
 
         return max(0, now()->diffInDays($this->banned_until, false));
     }
 
-    /**
-     * Админ, который заблокировал пользователя
-     */
     public function bannedBy()
     {
         return $this->belongsTo(User::class, 'banned_by');

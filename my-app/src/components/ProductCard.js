@@ -17,43 +17,63 @@ function normalizeKey(value) {
     .replace(/^-+|-+$/g, "");
 }
 
+function isBadImage(value) {
+  const path = String(value || "").toLowerCase();
+  return !path || path.includes("/demo/") || path.includes("placeholder") || path.includes("gradient") || path.endsWith(".svg");
+}
+
 const productImageFallbacks = {
-  "whey-protein-gold-standard": "/seed-images/products/whey-protein-gold-standard/main.webp",
-  "casein-protein": "/seed-images/products/casein-protein/main.webp",
-  "mass-gainer-pro": "/seed-images/products/mass-gainer-pro/main.webp",
-  "bcaa-5000": "/seed-images/products/bcaa-5000/main.webp",
-  "l-glutamine": "/seed-images/products/l-glutamine/main.webp",
-  "omega-3-ultra": "/seed-images/products/omega-3-ultra/main.webp",
-  "multivitamin-sport": "/seed-images/products/multivitamin-sport/main.webp",
-  "rezinovyy-espander": "/seed-images/products/rezinovyy-espander/main.webp",
-  "kovrik-dlya-yogi": "/seed-images/products/kovrik-dlya-yogi/main.webp",
-  "butylka-dlya-vody-1l": "/seed-images/products/butylka-dlya-vody-1l/main.webp",
-  "сывороточныи-протеин-pro": "/seed-images/products/whey-protein-gold-standard/main.webp",
-  "whey-protein": "/seed-images/products/whey-protein-gold-standard/main.webp",
-  "казеин": "/seed-images/products/casein-protein/main.webp",
-  "геиер": "/seed-images/products/mass-gainer-pro/main.webp",
-  "омега-3": "/seed-images/products/omega-3-ultra/main.webp",
-  "мультивитамин": "/seed-images/products/multivitamin-sport/main.webp",
-  "резиновыи-эспандер": "/seed-images/products/rezinovyy-espander/main.webp",
-  "коврик-для-иоги": "/seed-images/products/kovrik-dlya-yogi/main.webp",
-  "бутылка-для-воды-1л": "/seed-images/products/butylka-dlya-vody-1l/main.webp"
+  "whey-protein-gold-standard": "/seed-images/products/whey-protein-gold-standard/main.png",
+  "whey-protein": "/seed-images/products/whey-protein-gold-standard/main.png",
+  "сывороточныи-протеин-pro": "/seed-images/products/whey-protein-gold-standard/main.png",
+  "casein-protein": "/seed-images/products/casein-protein/main.png",
+  "casein": "/seed-images/products/casein-protein/main.png",
+  "казеин": "/seed-images/products/casein-protein/main.png",
+  "mass-gainer-pro": "/seed-images/products/mass-gainer-pro/main.png",
+  "геиер": "/seed-images/products/mass-gainer-pro/main.png",
+  "bcaa-5000": "/seed-images/products/bcaa-5000/main.png",
+  "l-glutamine": "/seed-images/products/l-glutamine/main.png",
+  "глютамин": "/seed-images/products/l-glutamine/main.png",
+  "omega-3-ultra": "/seed-images/products/omega-3-ultra/main.png",
+  "omega-3": "/seed-images/products/omega-3-ultra/main.png",
+  "омега-3": "/seed-images/products/omega-3-ultra/main.png",
+  "multivitamin-sport": "/seed-images/products/multivitamin-sport/main.png",
+  "мультивитамин": "/seed-images/products/multivitamin-sport/main.png",
+  "rezinovyy-espander": "/seed-images/products/rezinovyy-espander/main.png",
+  "резиновыи-эспандер": "/seed-images/products/rezinovyy-espander/main.png",
+  "kovrik-dlya-yogi": "/seed-images/products/kovrik-dlya-yogi/main.png",
+  "коврик-для-иоги": "/seed-images/products/kovrik-dlya-yogi/main.png",
+  "butylka-dlya-vody-1l": "/seed-images/products/butylka-dlya-vody-1l/main.png",
+  "бутылка-для-воды-1л": "/seed-images/products/butylka-dlya-vody-1l/main.png",
+  "magniy-recovery": "/seed-images/products/magniy-recovery/main.png",
+  "магнии-recovery": "/seed-images/products/magniy-recovery/main.png",
+  "preworkout-focus": "/seed-images/products/preworkout-focus/main.png",
+  "предтренировочныи-комплекс-focus": "/seed-images/products/preworkout-focus/main.png",
+  "protein-bars-12": "/seed-images/products/protein-bars-12/main.png",
+  "протеиновые-батончики-12-шт": "/seed-images/products/protein-bars-12/main.png",
+  "creatine-monohydrate": "/seed-images/products/creatine-monohydrate/main.png",
+  "креатин-моногидрат": "/seed-images/products/creatine-monohydrate/main.png"
 };
 
 function mappedProductImage(product) {
   const keys = [product?.slug, product?.name, product?.title, product?.id].map(normalizeKey).filter(Boolean);
-  for (const key of keys) {
-    if (productImageFallbacks[key]) return productImageFallbacks[key];
-  }
+  for (const key of keys) if (productImageFallbacks[key]) return productImageFallbacks[key];
   return null;
 }
 
+function firstGoodImage(values = []) {
+  return values.find((value) => !isBadImage(value)) || null;
+}
+
 function imageOrFallback(product) {
-  return product?.variants?.find?.((variant) => variant?.image_url)?.image_url
-    || product?.image_url
-    || product?.gallery?.[0]
-    || product?.cover_image_url
-    || mappedProductImage(product)
-    || "/seed-images/products/whey-protein-gold-standard/main.webp";
+  return mappedProductImage(product)
+    || firstGoodImage([
+      product?.variants?.find?.((variant) => !isBadImage(variant?.image_url))?.image_url,
+      product?.image_url,
+      product?.gallery?.[0],
+      product?.cover_image_url,
+    ])
+    || "/seed-images/products/whey-protein-gold-standard/main.png";
 }
 
 
@@ -83,7 +103,7 @@ export default function ProductCard({ product, compact = false }) {
     <article className="group relative flex h-full flex-col overflow-hidden rounded-[24px] border border-[color:var(--stroke)] bg-[color:var(--panel)] shadow-[var(--shadow-sm)] transition duration-200 hover:-translate-y-1 hover:border-[color:var(--stroke-strong)] hover:shadow-[var(--shadow-md)]">
       <Link href={`/shop/${product.id}`} className={`relative block overflow-hidden bg-[color:var(--panel-2)] ${compact ? "aspect-[5/4]" : "aspect-square"}`}>
         {image ? (
-          <img src={image} onError={(event) => { event.currentTarget.src = mappedProductImage(product) || "/seed-images/products/whey-protein-gold-standard/main.webp"; }} alt={product.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]" />
+          <img src={image} onError={(event) => { event.currentTarget.src = mappedProductImage(product) || "/seed-images/products/whey-protein-gold-standard/main.png"; }} alt={product.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]" />
         ) : (
           <div className="grid h-full w-full place-items-center bg-[linear-gradient(145deg,var(--accent-soft),var(--secondary-soft))] text-sm font-bold text-[color:var(--muted)]">НашФит</div>
         )}

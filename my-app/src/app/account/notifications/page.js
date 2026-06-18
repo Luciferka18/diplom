@@ -8,6 +8,31 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 
+
+function normalizeNotificationType(type) {
+  return String(type || "").replace(/^admin\./, "");
+}
+
+function notificationKey(item) {
+  const data = item?.data || {};
+  const paymentId = data.payment_id || data.paymentId;
+  const orderId = data.order_id || data.orderId;
+  if (paymentId || orderId) {
+    return `${normalizeNotificationType(item.type)}:${paymentId ? `payment-${paymentId}` : `order-${orderId}`}:${item.title || ""}`;
+  }
+  return `${item?.type || ""}:${item?.title || ""}:${item?.body || ""}:${item?.action_url || ""}`;
+}
+
+function uniqueNotifications(list) {
+  const seen = new Set();
+  return (Array.isArray(list) ? list : []).filter((item) => {
+    const key = notificationKey(item);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function dateTime(value) {
   if (!value) return "";
   return new Date(value).toLocaleString("ru-RU", {
@@ -30,7 +55,7 @@ export default function NotificationsPage() {
     setError("");
     try {
       const response = await apiGet("/account/notifications?per_page=50");
-      setItems(response?.data || []);
+      setItems(uniqueNotifications(response?.data || []));
       setUnread(Number(response?.unread_count || 0));
     } catch (e) {
       setError(e?.message || "Не удалось загрузить уведомления.");

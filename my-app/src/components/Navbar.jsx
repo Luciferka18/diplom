@@ -16,8 +16,9 @@ export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
-  const { isAuthed, isTrainer } = useAuth();
+  const { isAuthed, isTrainer, loading } = useAuth();
   const { totalCount } = useCart();
+  const accountHref = !loading && !isAuthed ? "/login?next=/account" : "/account";
 
   const items = useMemo(
     () => {
@@ -29,11 +30,11 @@ export default function Navbar() {
         { href: "/memberships", label: "Абонементы" },
         { href: "/shop", label: "Магазин" },
         { href: "/cart", label: "Корзина" },
-        { href: "/account", label: "Кабинет" },
+        { href: accountHref, activeHref: "/account", label: "Кабинет" },
       ];
       return base;
     },
-    []
+    [accountHref]
   );
 
   useEffect(() => setOpen(false), [pathname]);
@@ -44,7 +45,10 @@ export default function Navbar() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const isActive = (href) => pathname === href || pathname?.startsWith(`${href}/`);
+  const isActive = (item) => {
+    const href = typeof item === "string" ? item : item?.activeHref || item?.href;
+    return pathname === href || pathname?.startsWith(`${href}/`);
+  };
 
   return (
     <>
@@ -61,7 +65,7 @@ export default function Navbar() {
                 href={it.href}
                 className={cn(
                   "rounded-xl px-3 py-2 text-sm text-[color:var(--muted)] transition hover:bg-[color:var(--panel)] hover:text-[color:var(--text)]",
-                  isActive(it.href) && "bg-[color:var(--panel)] text-[color:var(--text)]"
+                  isActive(it) && "bg-[color:var(--panel)] text-[color:var(--text)]"
                 )}
               >
                 <span className="relative inline-flex items-center gap-1.5">
@@ -114,7 +118,7 @@ export default function Navbar() {
                 href={it.href}
                 className={cn(
                   "rounded-xl border border-[color:var(--stroke)] bg-[color:var(--panel)] px-4 py-3 text-[color:var(--muted)]",
-                  isActive(it.href) && "bg-[color:var(--panel)] text-[color:var(--text)]"
+                  isActive(it) && "bg-[color:var(--panel)] text-[color:var(--text)]"
                 )}
               >
                 <span className="flex items-center justify-between gap-2">{it.label}{it.href === "/cart" && totalCount > 0 ? <span className="rounded-full bg-emerald-400 px-2 py-0.5 text-xs font-black text-slate-950">{totalCount}</span> : null}</span>

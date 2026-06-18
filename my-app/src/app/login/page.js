@@ -10,10 +10,22 @@ import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Mail, Lock, LogIn } from "lucide-react";
 
+const LOGOUT_MARKER_KEY = "nashfit:just-logged-out";
+
+function safeNextUrl(value) {
+  const fallback = "/account";
+  const raw = String(value || fallback).trim();
+
+  if (!raw.startsWith("/") || raw.startsWith("//")) return fallback;
+  if (raw.startsWith("/login") || raw.startsWith("/2fa")) return fallback;
+
+  return raw;
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, user } = useAuth();
+  const { login, user, loading } = useAuth();
 
   const [nextUrl, setNextUrl] = useState("/account");
   const [identifier, setIdentifier] = useState("");
@@ -21,21 +33,37 @@ function LoginForm() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [banInfo, setBanInfo] = useState(null);
+  const [skipAutoRedirect, setSkipAutoRedirect] = useState(false);
 
   useEffect(() => {
     const fromQuery = searchParams.get("next");
-    if (fromQuery) setNextUrl(fromQuery);
+    setNextUrl(safeNextUrl(fromQuery));
   }, [searchParams]);
 
   useEffect(() => {
-    if (user) router.replace(nextUrl);
-  }, [user, nextUrl, router]);
+    try {
+      const marker = sessionStorage.getItem(LOGOUT_MARKER_KEY);
+      if (marker) {
+        setSkipAutoRedirect(true);
+        sessionStorage.removeItem(LOGOUT_MARKER_KEY);
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!loading && user && !skipAutoRedirect) {
+      router.replace(safeNextUrl(nextUrl));
+    }
+  }, [loading, user, skipAutoRedirect, nextUrl, router]);
 
   async function onSubmit(e) {
     e.preventDefault();
     setError("");
     setBanInfo(null);
     setBusy(true);
+    setSkipAutoRedirect(false);
 
     try {
       const id = String(identifier || "").trim();
@@ -48,11 +76,11 @@ function LoginForm() {
 
       // Если требуется 2FA, перенаправляем на страницу 2FA
       if (result?.requires_2fa) {
-        router.push(`/2fa?uid=${result.user_id}&2fa=true&next=${encodeURIComponent(nextUrl)}`);
+        router.push(`/2fa?uid=${result.user_id}&2fa=true&next=${encodeURIComponent(safeNextUrl(nextUrl))}`);
         return;
       }
 
-      router.replace(nextUrl);
+      router.replace(safeNextUrl(nextUrl));
     } catch (err) {
       // Проверяем, не блокировка ли это
       if (err?.data?.is_banned) {

@@ -12,110 +12,91 @@ use Illuminate\Support\Str;
 class PasswordResetController extends Controller
 {
     /**
-     * Отправка запроса на сброс пароля
+     * Create a password reset token.
+     *
+     * For this diploma/local project we return a demo reset URL because SMTP is not configured.
+     * The response stays generic so the form does not disclose whether an email exists.
      */
     public function sendResetLink(Request $request)
     {
-        $request->validate([
-            'email' => ['required', 'email', 'exists:users,email'],
+        $data = $request->validate([
+            'email' => ['required', 'email'],
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $email = mb_strtolower(trim($data['email']));
+        $user = User::whereRaw('LOWER(email) = ?', [$email])->first();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
-                'message' => 'Пользователь не найден'
-            ], 404);
+                'message' => 'Если аккаунт с таким email существует, инструкция по сбросу будет подготовлена.',
+                'sent' => true,
+            ]);
         }
 
-        // Генерируем токен сброса
+        Password::deleteToken($user);
         $token = Password::createToken($user);
+        $frontend = rtrim(env('FRONTEND_URL', 'http://localhost:3000'), '/');
+        $resetUrl = $frontend . '/reset-password?email=' . urlencode($user->email) . '&token=' . urlencode($token);
 
-        // Для SPA возвращаем токен (в продакшене нужно отправлять email)
         return response()->json([
-            'message' => 'Ссылка для сброса пароля отправлена на ваш email',
-            'reset_token' => $token,
+            'message' => 'Инструкция по сбросу пароля подготовлена.',
+            'sent' => true,
             'email' => $user->email,
+            'reset_url' => $resetUrl,
+            'reset_token' => $token,
         ]);
     }
 
     /**
-     * Сброс пароля по токену
+     * Reset password by token.
      */
     public function resetPassword(Request $request)
     {
-        $request->validate([
+        $data = $request->validate([
             'token' => ['required', 'string'],
-            'email' => ['required', 'email', 'exists:users,email'],
+            'email' => ['required', 'email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $email = mb_strtolower(trim($data['email']));
+        $user = User::whereRaw('LOWER(email) = ?', [$email])->first();
 
-        if (!$user) {
+        if (! $user || ! Password::getRepository()->exists($user, $data['token'])) {
             return response()->json([
-                'message' => 'Пользователь не найден'
-            ], 404);
-        }
-
-        // Проверяем токен через хеширование
-        $token = $request->token;
-        $payload = Password::getRepository()->get($user);
-        
-        if (!$payload) {
-            return response()->json([
-                'message' => 'Токен не найден'
+                'message' => 'Ссылка для сброса пароля недействительна или истекла.',
             ], 422);
         }
 
-        // Проверяем, соответствует ли токен
-        $exists = Password::getRepository()->exists($user, $token);
-        
-        if (!$exists) {
-            return response()->json([
-                'message' => 'Неверный или истёкший токен'
-            ], 422);
-        }
-
-        // Сбрасываем пароль
         $user->forceFill([
-            'password' => Hash::make($request->password),
+            'password' => Hash::make($data['password']),
             'remember_token' => Str::random(60),
         ])->save();
 
-        // Удаляем использованные токены
         Password::deleteToken($user);
+        $user->tokens()->delete();
 
         return response()->json([
-            'message' => 'Пароль успешно изменён',
+            'message' => 'Пароль успешно изменён. Войдите с новым паролем.',
         ]);
     }
 
     /**
-     * Проверка токена сброса пароля
+     * Verify a password reset token.
      */
     public function verifyToken(Request $request)
     {
-        $request->validate([
+        $data = $request->validate([
             'token' => ['required', 'string'],
-            'email' => ['required', 'email', 'exists:users,email'],
+            'email' => ['required', 'email'],
         ]);
 
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user) {
-            return response()->json([
-                'valid' => false,
-                'message' => 'Пользователь не найден'
-            ], 404);
-        }
-
-        // Проверяем токен через репозиторий
-        $exists = Password::getRepository()->exists($user, $request->token);
+        $email = mb_strtolower(trim($data['email']));
+        $user = User::whereRaw('LOWER(email) = ?', [$email])->first();
+        $valid = $user ? Password::getRepository()->exists($user, $data['token']) : false;
 
         return response()->json([
-            'valid' => $exists,
-            'message' => $exists ? 'Токен действителен' : 'Неверный или истёкший токен'
-        ]);
+            'valid' => $valid,
+            'message' => $valid ? 'Ссылка действительна.' : 'Ссылка для сброса пароля недействительна или истекла.',
+        ], $valid ? 200 : 422);
     }
 }

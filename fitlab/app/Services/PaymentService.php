@@ -19,11 +19,11 @@ class PaymentService
             'user_id' => $userId,
             'payable_type' => $payable::class,
             'payable_id' => $payable->getKey(),
-            'provider' => 'mock',
+            'provider' => config('yookassa.enabled', true) ? 'yookassa' : 'mock',
             'status' => 'pending',
             'amount' => max(0, $amount),
-            'currency' => 'RUB',
-            'external_id' => 'mock_' . Str::uuid(),
+            'currency' => config('yookassa.currency', 'RUB'),
+            'external_id' => config('yookassa.enabled', true) ? null : 'mock_' . Str::uuid(),
             'metadata' => $metadata,
         ]);
 
@@ -32,9 +32,17 @@ class PaymentService
 
     public function confirm(Payment $payment, string $idempotencyKey): Payment
     {
-        if ($payment->status === 'paid') return $payment;
-
         return DB::transaction(function () use ($payment, $idempotencyKey) {
+            $payment = Payment::query()->lockForUpdate()->findOrFail($payment->id);
+
+            if ($payment->status === 'paid' || $payment->paid_at) {
+                if ($payment->status !== 'paid') {
+                    $payment->update(['status' => 'paid']);
+                }
+
+                return $payment->fresh('payable');
+            }
+
             $payment->update([
                 'status' => 'paid',
                 'idempotency_key' => $idempotencyKey,
@@ -80,8 +88,8 @@ class PaymentService
                 $activity->notifyTrainer($payable->trainer, 'trainer.booking.paid', 'Клиент оплатил тренировку', ($payable->client_name ?: 'Клиент') . ' оплатил запись.', '/account/bookings', $payable, ['payment_id' => $payment->id], $payment->user_id, 'dumbbell');
                 $activity->notifyAdmins('admin.booking.paid', 'Оплачена запись к тренеру', 'Оплачена запись к ' . ($payable->trainer?->name ?: 'тренеру') . '.', '/admin/bookings', $payable, ['payment_id' => $payment->id], $payment->user_id, 'calendar');
             } elseif ($payable instanceof Order) {
-                $activity->notifyUser($payment->user_id, 'order.paid', 'Заказ оплачен', 'Заказ №' . $payable->id . ' оплачен и передан в обработку.', '/account/orders', $payable, ['payment_id' => $payment->id], null, 'package');
-                $activity->notifyAdmins('admin.order.paid', 'Заказ оплачен', 'Заказ №' . $payable->id . ' оплачен.', '/admin/orders', $payable, ['payment_id' => $payment->id], $payment->user_id, 'package');
+                $activity->notifyUser($payment->user_id, 'order.paid', 'Заказ оплачен', 'Заказ №' . $payable->id . ' оплачен и передан в обработку.', '/account/orders', $payable, ['payment_id' => $payment->id, 'order_id' => $payable->id], null, 'package');
+                $activity->notifyAdmins('admin.order.paid', 'Заказ оплачен', 'Заказ №' . $payable->id . ' оплачен.', '/admin/orders', $payable, ['payment_id' => $payment->id, 'order_id' => $payable->id], $payment->user_id, 'package');
             }
 
             if ($payable?->promo_code_id) {
